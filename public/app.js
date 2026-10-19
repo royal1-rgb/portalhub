@@ -221,8 +221,8 @@ function paintTyping() {
 // ---------- form profil & sheet ----------
 function showLogin() {
   const el = $('#login'); el.hidden = false; let sel = null;
-  el.innerHTML = `<form class="lg" id="pf"><img class="logo" src="/logo.jpg" onerror="this.onerror=null;this.src='/logo.jpg'" width="48" height="48" alt="Hub Karyawan">
-    <h1>Hub Karyawan</h1><p>Pilih namamu, lalu masukkan PIN untuk masuk.</p>
+  el.innerHTML = `<form class="lg" id="pf"><img class="logo" src="/logo.jpg" onerror="this.onerror=null;this.src='/logo.jpg'" width="48" height="48" alt="Hub Karyawan"><span>Mjs Group</span>
+    <h1>Portal Hub Employee Mjs</h1><p>Pilih namamu, lalu masukkan PIN untuk masuk.</p>
     <div id="pick"><div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="rq" type="search" placeholder="Cari nama..." autocomplete="off"></div><div class="rl" id="rl"></div></div>
     <div id="chosen" hidden></div>
     <label class="fld" id="pinf" hidden><span>PIN (6 angka)</span><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
