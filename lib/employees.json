@@ -1,0 +1,393 @@
+[
+ {
+  "name": "ADITYA PRATAMA",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "AGUSTINUS ALVITO HARDIMAN WIRYANTO",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "AHMAT MUHAJIR",
+  "title": "Driver HO",
+  "pin": "123456"
+ },
+ {
+  "name": "AKHMAD NUR FAKHRUDIN",
+  "title": "Staff HR",
+  "pin": "123456"
+ },
+ {
+  "name": "ALIEF PRIANDARU",
+  "title": "Staff GA",
+  "pin": "123456"
+ },
+ {
+  "name": "ANDRE CHANDRA MULIONO",
+  "title": "Supervisor Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "ANNI LUBNAH",
+  "title": "Staff SC Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "ARDY STYANATA PURNAMA",
+  "title": "Staff Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "ARIF FIRMAWAN",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "BINA ESTHERLY",
+  "title": "Staff Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "BUDI SUTRISNO",
+  "title": "Office Boy",
+  "pin": "123456"
+ },
+ {
+  "name": "CAESILIA SRI MULYANI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "CHRISTIAN CHANDRA MESAKH",
+  "title": "Staff Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "DEA BONITA CARDELIA DAVINA",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "DENNY SETIAWAN WIDJAJA",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "DENNY WIJAYA SWANDIE",
+  "title": "ASM MJS",
+  "pin": "123456"
+ },
+ {
+  "name": "DIAN RATIH TUJIYANTI",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "DIAN ROSILAWATI",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "DIANA NATALIA SOEGIJONO",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "DWI ADITYA",
+  "title": "Auditor",
+  "pin": "123456"
+ },
+ {
+  "name": "DWI CHINTIA FENNY",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "DWI INDRI LIANA",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "DWI TEGUH RAHARJO",
+  "title": "Koordinator Audit",
+  "pin": "123456"
+ },
+ {
+  "name": "ELMA NADIA PUTRI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "FERA FEBRIYANA",
+  "title": "Staff Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "FERDIAN GUNAWAN",
+  "title": "Assistant ASM MJSM",
+  "pin": "123456"
+ },
+ {
+  "name": "FERDINAND ARDIYANTO WINOTO",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "FERITA",
+  "title": "Kadiv Supply Chain",
+  "pin": "123456"
+ },
+ {
+  "name": "FIRDA RISQIANA",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "FITRI UTAMI",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "GAMANG YUSTISIA PRAMUDRA",
+  "title": "Auditor",
+  "pin": "123456"
+ },
+ {
+  "name": "HANIF AJI PRAMUSINTO",
+  "title": "Auditor",
+  "pin": "123456"
+ },
+ {
+  "name": "HARI SOFYAN",
+  "title": "Staff GA",
+  "pin": "123456"
+ },
+ {
+  "name": "HELMI FAJAR MUJAHIDIN AKBAR",
+  "title": "Auditor",
+  "pin": "123456"
+ },
+ {
+  "name": "HENDI NUR AJI",
+  "title": "Driver HO",
+  "pin": "123456"
+ },
+ {
+  "name": "I GUSTI AYU NORMAYASARI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "IKA MILADIYAH NUR",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "INDRIYATI VALENTIN",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "JULIETA SEKAR PAMBAYUN",
+  "title": "Staff HR",
+  "pin": "123456"
+ },
+ {
+  "name": "KHATERINA SOEBIJANTONO",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "KURNIADI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "LARAS PUJI ASTUTI",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "LUKMAN SAEFUDIN",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "LUTFI SOFYAN ALHADI",
+  "title": "Staff Control",
+  "pin": "123456"
+ },
+ {
+  "name": "LUTFIA JAMLIKA LADUNI",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "M ANWAR FATHONI",
+  "title": "Staff GA",
+  "pin": "123456"
+ },
+ {
+  "name": "MARCEL TEDJO PRAWIRO",
+  "title": "Staff GA",
+  "pin": "123456"
+ },
+ {
+  "name": "MELIA WIJAYANTI",
+  "title": "Staff SC Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "MOCH BURHAN ARDIYANSYAH",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "MOCHAMAD IQBAL ARIF",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "MUHAMMAD FARIQ FARIZKI",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "MUHAMMAD MUSTOFA",
+  "title": "Staff SC Non Produk",
+  "pin": "123456"
+ },
+ {
+  "name": "MUHAMMAD TAQI",
+  "title": "Auditor",
+  "pin": "123456"
+ },
+ {
+  "name": "NAILA ZULFA",
+  "title": "Staf Monitoring",
+  "pin": "123456"
+ },
+ {
+  "name": "NUR AMALINA HIDAYATI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "NUR HIDAYATI",
+  "title": "Staff Dokumentasi",
+  "pin": "123456"
+ },
+ {
+  "name": "OEI FRANSISKA PASKALIA SUMARTONO",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "PUJI LESTARI",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "RAIL",
+  "title": "Driver HO",
+  "pin": "123456"
+ },
+ {
+  "name": "RANDY YUNIANTO",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "RIAN SETIAWAN",
+  "title": "Staff CD",
+  "pin": "123456",
+  "admin": true
+ },
+ {
+  "name": "ROHMAT RAHARDJO",
+  "title": "Mekanik Ban",
+  "pin": "123456"
+ },
+ {
+  "name": "ROYANTO",
+  "title": "Office Boy",
+  "pin": "123456"
+ },
+ {
+  "name": "SANTI EKA SETIAWAN",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "SLAMET RIMARTA PATRIANTO",
+  "title": "Staff HR",
+  "pin": "123456"
+ },
+ {
+  "name": "SUHARYO",
+  "title": "Driver HO",
+  "pin": "123456"
+ },
+ {
+  "name": "SUMARDI",
+  "title": "Koordinator Channel",
+  "pin": "123456"
+ },
+ {
+  "name": "TASYA LAISAFIL",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "TEGUH HERI SUSANTO",
+  "title": "Kadiv HRD",
+  "pin": "123456"
+ },
+ {
+  "name": "TRI PUJIONO",
+  "title": "Mekanik Ban Helper",
+  "pin": "123456"
+ },
+ {
+  "name": "TRISID NINA",
+  "title": "Staff Pajak",
+  "pin": "123456"
+ },
+ {
+  "name": "TUTI PUJI HARTATI",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "VENNY RESTIARA",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "VIONA ADELIAN",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ },
+ {
+  "name": "WILDHA ASMARA DIAH AYU TRIHANDAYANI",
+  "title": "Staff Finance",
+  "pin": "123456"
+ },
+ {
+  "name": "WULAN NURSIYAM AFILLAH",
+  "title": "Staf TSI",
+  "pin": "123456"
+ },
+ {
+  "name": "YANU IDRIS GALANG MARUF",
+  "title": "Driver HO",
+  "pin": "123456"
+ },
+ {
+  "name": "YOSITA ALIYANTI",
+  "title": "Staf Accounting",
+  "pin": "123456"
+ }
+]
