@@ -1,13 +1,13 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let att = null, attKind = 'telat', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -83,9 +83,11 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; cuti = d.cuti; quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; cuti = d.cuti; att = d.att || null; quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
-    paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); } startPoll();
+    paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
+    if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
+    startPoll();
   } else if (d.type === 'user') { users.set(d.user.id, d.user); render(); if (open) chatHead(); if (empPaint) empPaint(); }
   else if (d.type === 'msg') {
     const m = d.msg, ML = (msgs[m.conv] = msgs[m.conv] || []);
@@ -111,7 +113,7 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', me: 'Profil Karyawan' };
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', me: 'Profil Karyawan' };
 function render() {
   if (!me) return;
   const u = users.get(me), n = totalUnread();
@@ -119,9 +121,9 @@ function render() {
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
-  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['me', 'person', 'Profil']].map(([k, i, l]) =>
+  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['att', 'clock', 'Absensi'], ['me', 'person', 'Profil']].map(([k, i, l]) =>
     `<button data-tab="${k}" class="${tab === k ? 'on' : ''}"${tab === k ? ' aria-current="page"' : ''}><span style="position:relative">${ic(i)}${k === 'chat' && n ? `<span class="badge">${n}</span>` : ''}</span>${l}</button>`).join('');
-  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else renderMe();
+  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else renderMe();
 }
 
 function renderChat() {
@@ -170,7 +172,7 @@ function renderHome() {
 
 function renderMe() {
   const u = users.get(me);
-  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${admin ? `<button class="card li" id="emp" style="width:100%;padding:16px 20px"><span class="ic">${ic('group', 20)}</span><div><b>Kelola Karyawan</b><small>Tambah karyawan agar bisa login · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="cutiAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('file', 20)}</span><div><b>Data Cuti</b><small>Unggah ulang berkas Excel cuti · Admin</small></div>${ic('chev', 20)}</button>` : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
+  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${admin ? `<button class="card li" id="emp" style="width:100%;padding:16px 20px"><span class="ic">${ic('group', 20)}</span><div><b>Kelola Karyawan</b><small>Tambah karyawan agar bisa login · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="cutiAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('file', 20)}</span><div><b>Data Cuti</b><small>Unggah ulang berkas Excel cuti · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="attAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('clock', 20)}</span><div><b>Data Absensi</b><small>Unggah ulang berkas Excel absensi · Admin</small></div>${ic('chev', 20)}</button>` : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
     ${cutiHTML()}<div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
     <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Hub Karyawan 1.0 · Jaringan lokal</div>`;
 }
@@ -304,6 +306,77 @@ function cutiSheet() {
     e.target.value = '';
   };
 }
+// ---------- Absensi ----------
+const KINDS = { telat: 'Terlambat', ontime: 'Tepat Waktu', alpha: 'Alpha', pulang: 'Pulang Awal', cuti: 'Cuti', sakit: 'Sakit', ijin: 'Ijin', dinas: 'Dinas Luar', lembur: 'Lembur', libur: 'Libur / OFF', lain: 'Lainnya' };
+const KORDER = Object.keys(KINDS);
+const fmtLong = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); };
+const monthLbl = mo => new Date(+mo.slice(0, 4), +mo.slice(5, 7) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+const jam = a => {
+  if (!a) return '';
+  const m = String(a).match(/^(\d{1,2})[.:](\d{2})\s*-\s*(?:(\d{1,2})[.:](\d{2})|\?)$/);
+  if (!m) return esc(a);
+  return `${m[1].padStart(2, '0')}:${m[2]} – ${m[3] ? m[3].padStart(2, '0') + ':' + m[4] : '?'}`;
+};
+const attGroup = () => { const by = {}; ((att && att.rows) || []).forEach(r => (by[r.k] = by[r.k] || []).push(r)); return by; };
+function renderAtt() {
+  const a = att;
+  const head = `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3>${a && a.has ? `<small style="color:var(--ink2)">${fmtLong(a.from)} – ${fmtLong(a.to)}</small>` : ''}</div></div>`;
+  if (!a || !a.has) { $('#main').innerHTML = head + '<div class="empty">Data absensi belum tersedia. Admin belum mengunggah data absensi.</div>'; return; }
+  const foot = `<div class="ver" style="text-align:left;font-weight:400;margin:4px 0 14px">Data diperbarui ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}</div>`;
+  if (!a.rows.length) { $('#main').innerHTML = head + '<div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
+  const by = attGroup(), tel = by.telat || [], mins = tel.reduce((s, r) => s + (r.m || 0), 0), nomin = tel.filter(r => r.m == null).length;
+  const tiles = KORDER.filter(k => k !== 'telat' && (by[k] || []).length).map(k => `<button class="tile ${k}" data-att="${k}"><b>${by[k].length}</b><span>${KINDS[k]}</span></button>`).join('');
+  $('#main').innerHTML = head + `<button class="card ahero" data-att="telat" style="width:100%;text-align:left"><div class="cl" style="color:#b45309">${ic('clock', 16)}Keterlambatan</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:6px"><div><span class="big">${tel.length}</span> <span class="bigl">kali terlambat</span>
+    <div class="sub">${tel.length ? `Total ${nf(mins)} menit${nomin ? ` (+${nomin} hari tanpa keterangan menit)` : ''} · ketuk untuk melihat tanggal` : 'Tidak ada keterlambatan. Pertahankan!'}</div></div><span style="color:#94a3b8">${ic('chev', 22)}</span></div></button>
+    <div class="agrid">${tiles}</div>${foot}`;
+}
+function openDetail(kind) { attKind = kind; paintDetail(); }
+function paintDetail() {
+  const el = $('#detail'); el.hidden = false;
+  const by = attGroup(), rows = (att && att.rows) || [], kinds = KORDER.filter(k => (by[k] || []).length);
+  const list = attKind === 'all' ? rows : (by[attKind] || []);
+  const chips = [['all', 'Semua', rows.length], ...kinds.map(k => [k, KINDS[k], by[k].length])];
+  let html = '', cur = '';
+  for (const r of list) {
+    const mo = r.d.slice(0, 7);
+    if (mo !== cur) { cur = mo; html += `<div class="mh">${monthLbl(mo)} · ${list.filter(x => x.d.startsWith(mo)).length} hari</div>`; }
+    const noOut = /-\s*\?$/.test(r.a || '');
+    html += `<div class="li"><span class="ic k-${r.k}">${ic(r.k === 'telat' || r.k === 'ontime' ? 'clock' : 'check', 18)}</span><div><b>${esc(fmtD(r.d))}</b><small>${esc(r.s)}${noOut ? ' · jam pulang belum tercatat' : ''}</small></div><span class="jam">${jam(r.a)}</span></div>`;
+  }
+  el.innerHTML = `<header><button class="icon-btn" id="dback" aria-label="Kembali">${ic('back')}</button><div class="ct"><div style="min-width:0"><b>Detail Absensi</b><small>${esc(attKind === 'all' ? 'Semua status' : KINDS[attKind])} · ${list.length} hari</small></div></div></header>
+    <div class="chips" style="margin:0;padding:10px 16px">${chips.map(([k, l, n]) => `<button class="chip ${attKind === k ? 'on' : ''}" data-ak="${k}">${l}<b>${n}</b></button>`).join('')}</div>
+    <div class="dl">${html || '<div class="empty">Tidak ada data untuk status ini.</div>'}</div>`;
+  $('#dback').onclick = () => { el.hidden = true; el.innerHTML = ''; };
+}
+function attInfo() {
+  const a = att && att.has ? att : null;
+  return a ? `Data saat ini: <b>${esc(a.file)}</b> · ${a.total} catatan untuk ${a.people} karyawan · ${fmtLong(a.from)} – ${fmtLong(a.to)} · diunggah ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}` : 'Belum ada data absensi.';
+}
+function attSheet() {
+  const sh = $('#sheet'); sh.hidden = false;
+  sh.innerHTML = `<div class="sh"><h3>Data Absensi<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+    <div class="empty" id="ainfo" style="margin-bottom:12px">${attInfo()}</div>
+    <p style="margin:0 0 14px;color:var(--ink2);font-size:13px;line-height:20px">Berkas Excel (.xlsx) dengan kolom <b>Nama</b>, <b>Tanggal</b> (contoh 30-08-2026), <b>Aktual</b> (contoh 07.38 - 16.07), dan <b>Status</b>. Satu baris = satu hari per karyawan. Mengunggah berkas baru <b>menghapus seluruh data absensi sebelumnya</b>.</p>
+    <label class="btn" style="cursor:pointer">${ic('upload', 18)}Pilih berkas .xlsx<input type="file" id="af" accept=".xlsx" hidden></label><div class="err" id="ares" role="status" style="margin-top:12px"></div></div>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+  $('#af').onchange = async e => {
+    const f = e.target.files[0], out = $('#ares'); if (!f) return;
+    const say = (m, good) => { out.style.color = good ? 'var(--sec)' : 'var(--err)'; out.innerHTML = m; };
+    if (!/\.xlsx$/i.test(f.name)) { e.target.value = ''; return say('Berkas harus berformat .xlsx.'); }
+    if (!confirm(`Unggah "${f.name}"?\nData absensi sebelumnya akan dihapus dan diganti seluruhnya.`)) { e.target.value = ''; return; }
+    say('Mengunggah…', true);
+    try {
+      const r = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'x-session': session, 'x-kind': 'absensi', 'x-filename': encodeURIComponent(f.name) }, body: f });
+      const d = await r.json();
+      if (!r.ok) return say(esc(d.error || 'Gagal mengunggah.'));
+      say(`Berhasil: ${d.total} catatan absensi untuk ${d.people} karyawan (${fmtLong(d.from)} – ${fmtLong(d.to)}).` + (d.skipped ? `<br>${d.skipped} baris dilewati (tanggal/status kosong atau ganda).` : '') +
+        (d.unmatched.length ? `<br>${d.unmatched.length} nama di berkas belum terdaftar sebagai karyawan, datanya tidak dimuat: ${esc(d.unmatched.slice(0, 6).join(', '))}${d.unmatched.length > 6 ? '…' : ''}. Tambahkan lewat Kelola Karyawan, lalu unggah ulang.` : '') +
+        (d.unknown.length ? `<br>Status belum dikenali (masuk kategori Lainnya): ${esc(d.unknown.slice(0, 5).join(', '))}` : ''), true);
+    } catch { say('Gagal terhubung ke server.'); }
+    e.target.value = '';
+  };
+}
 function empSheet() {
   const sh = $('#sheet'); sh.hidden = false;
   sh.innerHTML = `<form class="sh" id="ef"><h3>Tambah Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
@@ -345,7 +418,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],#new,#pin,#emp,#cutiAdm,#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.tab) { tab = t.dataset.tab; render(); $('#main').scrollTop = 0; }
   else if (t.dataset.q) {
@@ -354,12 +427,15 @@ document.addEventListener('click', e => {
     if (v !== null) send({ type: 'setquota', id: t.dataset.q, quota: v });
   } else if (t.dataset.go) { tab = t.dataset.go; render(); }
   else if (t.dataset.f) { filter = t.dataset.f; renderChat(); }
+  else if (t.dataset.att) openDetail(t.dataset.att);
+  else if (t.dataset.ak) { attKind = t.dataset.ak; paintDetail(); }
   else if (t.dataset.c) openChat(t.dataset.c);
   else if (t.dataset.u) { $('#sheet').hidden = true; openChat(dmId(t.dataset.u)); }
   else if (t.id === 'new') newSheet();
   else if (t.id === 'pin') pinSheet();
   else if (t.id === 'emp') empSheet();
   else if (t.id === 'cutiAdm') cutiSheet();
+  else if (t.id === 'attAdm') attSheet();
   else if (t.id === 'bell') { tab = 'chat'; filter = 'unread'; render(); }
   else if (t.id === 'meBtn') { tab = 'me'; render(); }
   else if (t.id === 'copy') { const s = t.querySelector('span:last-child') || t; try { navigator.clipboard.writeText(location.origin); } catch {} s.textContent = 'Alamat disalin'; setTimeout(render, 1200); }
