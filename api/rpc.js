@@ -1,6 +1,6 @@
 // Satu fungsi API untuk seluruh aplikasi (cocok untuk Vercel serverless). Realtime memakai polling.
 const crypto = require('crypto');
-const { q, ready, getDb, mutate, bumpVer } = require('../lib/db');
+const { q, ready, getDb, mutate, tx, bumpVer } = require('../lib/db');
 const L = require('../lib/logic');
 
 const now = () => Date.now();
@@ -25,12 +25,15 @@ async function snapshot(uid, session) {
   const db = await getDb(true), u = db.users[uid], t = now();
   if (!u) return { type: 'auth_error', resume: true };
   await touch(uid, t);
-  const [m, rd, pe, pr, v] = await Promise.all([
+  const [m, rd, pe, pr, v, am, ar] = await Promise.all([
+
     q(`SELECT id, conv, frm, body, ts FROM (SELECT *, row_number() OVER (PARTITION BY conv ORDER BY id DESC) rn FROM messages WHERE ${ME}) x WHERE rn <= 200 ORDER BY id`, [uid]),
     q('SELECT conv, last_id FROM reads WHERE uid = $1', [uid]),
     q('SELECT uid, conv, last_id FROM reads WHERE uid <> $1 AND (conv = \'all\' OR (conv LIKE \'d:%\' AND strpos(conv, $1) > 0))', [uid]),
     q('SELECT uid, ts FROM presence'),
     q("SELECT COALESCE((SELECT (v #>> '{}')::int FROM kv WHERE k = 'ver'), 0) AS n"),
+    q("SELECT v FROM kv WHERE k = 'att_meta'"),
+    q('SELECT d, aktual, status, kind, mins FROM attendance WHERE uid = $1 ORDER BY d DESC', [uid]),
   ]);
   const seen = Object.fromEntries(pr.rows.map(r => [r.uid, Number(r.ts)])), msgs = { all: [] }, peer = {}, reads = {};
   for (const r of m.rows) (msgs[r.conv] = msgs[r.conv] || []).push(msgOut(r));
@@ -38,7 +41,7 @@ async function snapshot(uid, session) {
   for (const r of pe.rows) (peer[r.conv] = peer[r.conv] || {})[r.uid] = Number(r.last_id);
   const users = Object.values(db.users).map(x => ({ id: x.id, name: x.name, title: x.title, online: (seen[x.id] || 0) > t - 15000, lastSeen: seen[x.id] || 0 }));
   const maxId = m.rows.reduce((a, r) => Math.max(a, Number(r.id)), 0);
-  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att: am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: r.kind, m: r.mins })) } : { has: false }, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -140,13 +143,32 @@ async function route(d, ip) {
 async function upload(req, res, raw) {
   const au = await authed(req.headers['x-session']);
   const db = au && await getDb(true);
-  if (!au || !(db.users[au.uid] || {}).admin) return json(res, 403, { error: 'Hanya admin yang dapat mengunggah data cuti.' });
+  if (!au || !(db.users[au.uid] || {}).admin) return json(res, 403, { error: 'Hanya admin yang dapat mengunggah data.' });
+  if (req.headers['x-kind'] === 'absensi') return uploadAbsensi(req, res, raw, db, au);
   try {
     const r = await L.parseCuti(raw, db.users);
     let file = 'cuti.xlsx'; try { file = L.clean(decodeURIComponent(req.headers['x-filename'] || ''), 80) || file; } catch {}
     await mutate(async d => { d.cuti = { rows: r.rows, quotas: r.quotas, year: r.year, total: r.total, people: r.people, updatedAt: now(), by: d.users[au.uid].name, file }; }); // data lama diganti
     await bumpVer();
     json(res, 200, { ok: true, total: r.total, people: r.people, year: r.year, skipped: r.skipped, conflicts: r.conflicts, quotaCount: Object.keys(r.quotas).length, unmatched: r.unmatched });
+  } catch (e) { json(res, 400, { error: e.message || 'File tidak dapat dibaca.' }); }
+}
+
+async function uploadAbsensi(req, res, raw, db, au) {
+  try {
+    const r = await L.parseAbsensi(raw, db.users);
+    let file = 'absensi.xlsx'; try { file = L.clean(decodeURIComponent(req.headers['x-filename'] || ''), 80) || file; } catch {}
+    const meta = { updatedAt: now(), by: db.users[au.uid].name, file, total: r.rows.length, people: r.people, from: r.from, to: r.to };
+    await tx(async c => { // data absensi lama dihapus, diganti data unggahan terakhir (atomik)
+      await c.query('DELETE FROM attendance');
+      for (let i = 0; i < r.rows.length; i += 2000) {
+        const p = r.rows.slice(i, i + 2000);
+        await c.query('INSERT INTO attendance (uid, d, aktual, status, kind, mins) SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::int[])', [p.map(x => x.uid), p.map(x => x.d), p.map(x => x.a), p.map(x => x.s), p.map(x => x.k), p.map(x => x.m)]);
+      }
+      await c.query("INSERT INTO kv (k, v) VALUES ('att_meta', $1::jsonb) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v", [JSON.stringify(meta)]);
+    });
+    await bumpVer();
+    json(res, 200, { ok: true, total: r.rows.length, people: r.people, from: r.from, to: r.to, skipped: r.skipped, unmatched: r.unmatched, unknown: r.unknown });
   } catch (e) { json(res, 400, { error: e.message || 'File tidak dapat dibaca.' }); }
 }
 
