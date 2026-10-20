@@ -1,7 +1,7 @@
 @font-face{font-family:"Plus Jakarta Sans";font-weight:400;src:url(/fonts/pjs-400.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"Plus Jakarta Sans";font-weight:600;src:url(/fonts/pjs-600.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"Plus Jakarta Sans";font-weight:700;src:url(/fonts/pjs-700.woff2) format("woff2");font-display:swap}
-:root{--ff:"Plus Jakarta Sans",system-ui,sans-serif;--surface:#f8f9ff;--card:#fff;--c-low:#eff4ff;--c:#e5eeff;--c-high:#dce9ff;--ink:#0b1c30;--ink2:#464554;--outline:#777586;--primary:#4338ca;--iris:#6366f1;--sec:#006c4a;--sec-c:#82f5c1;--on-sec-c:#00714e;--var:#d3e4fe;--err:#ba1a1a;--line:#e2e8f0;
+:root{--ff:"Plus Jakarta Sans",system-ui,sans-serif;--surface:#f8f9ff;--card:#fff;--c-low:#eff4ff;--c:#e5eeff;--c-high:#dce9ff;--ink:#0b1c30;--ink2:#44505f;--outline:#6b7686;--primary:#0D429D;--iris:#3B6FD0;--sec:#006c4a;--sec-c:#82f5c1;--on-sec-c:#00714e;--var:#d3e4fe;--err:#ba1a1a;--line:#e2e8f0;
 --sh1:0 2px 8px -2px rgba(15,23,42,.05),0 1px 3px -1px rgba(15,23,42,.04);--sh2:0 8px 20px -4px rgba(15,23,42,.08),0 4px 6px -2px rgba(15,23,42,.03)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
