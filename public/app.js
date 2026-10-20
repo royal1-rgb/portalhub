@@ -7,7 +7,7 @@ const ls = { get: k => { try { return localStorage.getItem(k); } catch { return 
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let att = null, attKind = 'telat', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let att = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -83,7 +83,7 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; cuti = d.cuti; att = d.att || null; quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; cuti = d.cuti; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
@@ -317,25 +317,61 @@ const jam = a => {
   if (!m) return esc(a);
   return `${m[1].padStart(2, '0')}:${m[2]} – ${m[3] ? m[3].padStart(2, '0') + ':' + m[4] : '?'}`;
 };
-const attGroup = () => { const by = {}; ((att && att.rows) || []).forEach(r => (by[r.k] = by[r.k] || []).push(r)); return by; };
+function setAtt(a) { // data baru (mis. admin mengunggah ulang) -> filter tanggal dikembalikan ke semua
+  const prev = att && att.updatedAt; att = a || null;
+  if (!att || att.updatedAt !== prev) { attFrom = attTo = null; attMonth = 'all'; }
+}
+const effFrom = () => attFrom || (att && att.from), effTo = () => attTo || (att && att.to);
+const attRows = () => ((att && att.rows) || []).filter(r => r.d >= effFrom() && r.d <= effTo());
+const periodLabel = () => effFrom() === effTo() ? fmtLong(effFrom()) : `${fmtLong(effFrom())} – ${fmtLong(effTo())}`;
+function attMonths() { // semua bulan pada periode data
+  const out = []; let [y, m] = att.from.slice(0, 7).split('-').map(Number); const end = att.to.slice(0, 7);
+  for (;;) { const k = `${y}-${String(m).padStart(2, '0')}`; out.push(k); if (k >= end) break; if (++m > 12) { m = 1; y++; } }
+  return out;
+}
+function setMonth(mo) {
+  attMonth = mo;
+  if (mo === 'all') attFrom = attTo = null;
+  else { const [y, m] = mo.split('-').map(Number), e = `${mo}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`; attFrom = mo + '-01' > att.from ? mo + '-01' : att.from; attTo = e < att.to ? e : att.to; }
+  renderAtt();
+}
+document.addEventListener('change', e => {
+  if (e.target.id !== 'adf' && e.target.id !== 'adt') return;
+  let f = $('#adf').value || null, t = $('#adt').value || null;
+  if (f && t && f > t) { if (e.target.id === 'adf') t = f; else f = t; } // tanggal lain menyesuaikan
+  attFrom = f; attTo = t; attMonth = null; renderAtt();
+});
+const attGroup = () => { const by = {}; attRows().forEach(r => (by[r.k] = by[r.k] || []).push(r)); return by; };
 function renderAtt() {
   const a = att;
-  const head = `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3>${a && a.has ? `<small style="color:var(--ink2)">${fmtLong(a.from)} – ${fmtLong(a.to)}</small>` : ''}</div></div>`;
-  if (!a || !a.has) { $('#main').innerHTML = head + '<div class="empty">Data absensi belum tersedia. Admin belum mengunggah data absensi.</div>'; return; }
+  if (!a || !a.has) { $('#main').innerHTML = '<div class="sec" style="margin:0 0 10px"><h3 class="h">Rekap Absensi</h3></div><div class="empty">Data absensi belum tersedia. Admin belum mengunggah data absensi.</div>'; return; }
   const foot = `<div class="ver" style="text-align:left;font-weight:400;margin:4px 0 14px">Data diperbarui ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}</div>`;
-  if (!a.rows.length) { $('#main').innerHTML = head + '<div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
+  if (!a.rows.length) { $('#main').innerHTML = '<div class="sec" style="margin:0 0 10px"><h3 class="h">Rekap Absensi</h3></div><div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
+  if (!$('#attres')) {
+    $('#main').innerHTML = `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3><small id="attper" style="color:var(--ink2)"></small></div></div>
+      <div class="card" style="padding:14px 16px"><div class="fl">Pilih bulan</div><div class="chips" id="amchips" style="margin:6px -16px 12px;padding:2px 16px"></div>
+      <div class="drow"><label class="fld" style="margin:0"><span>Dari tanggal</span><input id="adf" type="date"></label><label class="fld" style="margin:0"><span>Sampai tanggal</span><input id="adt" type="date"></label></div>
+      <button class="btn sec2" id="adreset" style="margin-top:12px;height:40px" hidden>Tampilkan semua tanggal</button></div><div id="attres"></div>`;
+  }
+  $('#amchips').innerHTML = [['all', 'Semua'], ...attMonths().map(k => [k, monthLbl(k)])].map(([k, l]) => `<button class="chip ${attMonth === k ? 'on' : ''}" data-am="${k}">${l}</button>`).join('');
+  $('#adf').min = $('#adt').min = a.from; $('#adf').max = $('#adt').max = a.to;
+  $('#adf').value = effFrom(); $('#adt').value = effTo();
+  $('#adreset').hidden = !(attFrom || attTo); $('#attper').textContent = periodLabel();
+  const rows = attRows();
+  if (!rows.length) { $('#attres').innerHTML = '<div class="empty" style="margin-top:12px">Tidak ada catatan absensi pada rentang tanggal ini.</div>' + foot; return; }
   const by = attGroup(), tel = by.telat || [], mins = tel.reduce((s, r) => s + (r.m || 0), 0), nomin = tel.filter(r => r.m == null).length;
   const tiles = KORDER.filter(k => k !== 'telat' && (by[k] || []).length).map(k => `<button class="tile ${k}" data-att="${k}"><b>${by[k].length}</b><span>${KINDS[k]}</span></button>`).join('');
-  $('#main').innerHTML = head + `<button class="card ahero" data-att="telat" style="width:100%;text-align:left"><div class="cl" style="color:#b45309">${ic('clock', 16)}Keterlambatan</div>
+  $('#attres').innerHTML = `<button class="card ahero" data-att="telat" style="width:100%;text-align:left"><div class="cl" style="color:#b45309">${ic('clock', 16)}Keterlambatan</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:6px"><div><span class="big">${tel.length}</span> <span class="bigl">kali terlambat</span>
-    <div class="sub">${tel.length ? `Total ${nf(mins)} menit${nomin ? ` (+${nomin} hari tanpa keterangan menit)` : ''} · ketuk untuk melihat tanggal` : 'Tidak ada keterlambatan. Pertahankan!'}</div></div><span style="color:#94a3b8">${ic('chev', 22)}</span></div></button>
+    <div class="sub">${tel.length ? `Total ${nf(mins)} menit${nomin ? ` (+${nomin} hari tanpa keterangan menit)` : ''} · ketuk untuk melihat tanggal` : 'Tidak ada keterlambatan pada periode ini. Pertahankan!'}</div></div><span style="color:#94a3b8">${ic('chev', 22)}</span></div></button>
     <div class="agrid">${tiles}</div>${foot}`;
 }
 function openDetail(kind) { attKind = kind; paintDetail(); }
 function paintDetail() {
   const el = $('#detail'); el.hidden = false;
-  const by = attGroup(), rows = (att && att.rows) || [], kinds = KORDER.filter(k => (by[k] || []).length);
-  const list = attKind === 'all' ? rows : (by[attKind] || []);
+  const by = attGroup(), rows = attRows(), kinds = KORDER.filter(k => (by[k] || []).length);
+  let list = attKind === 'all' ? rows : (by[attKind] || []);
+  if (attSort === 'asc') list = list.slice().reverse();
   const chips = [['all', 'Semua', rows.length], ...kinds.map(k => [k, KINDS[k], by[k].length])];
   let html = '', cur = '';
   for (const r of list) {
@@ -344,9 +380,9 @@ function paintDetail() {
     const noOut = /-\s*\?$/.test(r.a || '');
     html += `<div class="li"><span class="ic k-${r.k}">${ic(r.k === 'telat' || r.k === 'ontime' ? 'clock' : 'check', 18)}</span><div><b>${esc(fmtD(r.d))}</b><small>${esc(r.s)}${noOut ? ' · jam pulang belum tercatat' : ''}</small></div><span class="jam">${jam(r.a)}</span></div>`;
   }
-  el.innerHTML = `<header><button class="icon-btn" id="dback" aria-label="Kembali">${ic('back')}</button><div class="ct"><div style="min-width:0"><b>Detail Absensi</b><small>${esc(attKind === 'all' ? 'Semua status' : KINDS[attKind])} · ${list.length} hari</small></div></div></header>
+  el.innerHTML = `<header><button class="icon-btn" id="dback" aria-label="Kembali">${ic('back')}</button><div class="ct"><div style="min-width:0"><b>Detail Absensi</b><small>${esc(attKind === 'all' ? 'Semua status' : KINDS[attKind])} · ${list.length} hari</small></div></div><button class="chip" data-sort style="margin-left:auto;margin-right:12px">${attSort === 'desc' ? 'Terbaru' : 'Terlama'}</button></header>
     <div class="chips" style="margin:0;padding:10px 16px">${chips.map(([k, l, n]) => `<button class="chip ${attKind === k ? 'on' : ''}" data-ak="${k}">${l}<b>${n}</b></button>`).join('')}</div>
-    <div class="dl">${html || '<div class="empty">Tidak ada data untuk status ini.</div>'}</div>`;
+    <div class="dl"><div class="sub" style="margin:10px 0 0">Periode ${periodLabel()}</div>${html || '<div class="empty">Tidak ada data untuk status ini.</div>'}</div>`;
   $('#dback').onclick = () => { el.hidden = true; el.innerHTML = ''; };
 }
 function attInfo() {
@@ -418,7 +454,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.tab) { tab = t.dataset.tab; render(); $('#main').scrollTop = 0; }
   else if (t.dataset.q) {
@@ -427,6 +463,9 @@ document.addEventListener('click', e => {
     if (v !== null) send({ type: 'setquota', id: t.dataset.q, quota: v });
   } else if (t.dataset.go) { tab = t.dataset.go; render(); }
   else if (t.dataset.f) { filter = t.dataset.f; renderChat(); }
+  else if (t.hasAttribute('data-sort')) { attSort = attSort === 'desc' ? 'asc' : 'desc'; paintDetail(); }
+  else if (t.dataset.am) setMonth(t.dataset.am);
+  else if (t.id === 'adreset') setMonth('all');
   else if (t.dataset.att) openDetail(t.dataset.att);
   else if (t.dataset.ak) { attKind = t.dataset.ak; paintDetail(); }
   else if (t.dataset.c) openChat(t.dataset.c);
