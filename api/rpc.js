@@ -41,7 +41,7 @@ async function snapshot(uid, session) {
   for (const r of pe.rows) (peer[r.conv] = peer[r.conv] || {})[r.uid] = Number(r.last_id);
   const users = Object.values(db.users).map(x => ({ id: x.id, name: x.name, title: x.title, online: (seen[x.id] || 0) > t - 15000, lastSeen: seen[x.id] || 0 }));
   const maxId = m.rows.reduce((a, r) => Math.max(a, Number(r.id)), 0);
-  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att: am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status), m: r.mins })) } : { has: false }, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att: am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false }, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
