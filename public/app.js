@@ -311,6 +311,13 @@ const KINDS = { telat: 'Terlambat', ontime: 'Tepat Waktu', alpha: 'Alpha', pulan
 const KORDER = Object.keys(KINDS);
 const fmtLong = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); };
 const monthLbl = mo => new Date(+mo.slice(0, 4), +mo.slice(5, 7) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+const KET = r => { // keterangan detail: dalam toleransi (<=15 menit) bukan terlambat; pulang sebelum 16.00 = pulang awal
+  let t = r.s;
+  if (r.k !== 'telat' && r.m != null && r.m <= 15 && /terlambat/i.test(t)) t = t.replace(/(datang\s+)?terlambat/i, 'Toleransi');
+  const o = String(r.a || '').match(/-\s*(\d{1,2})[.:](\d{2})\s*$/), early = o && +o[1] * 60 + +o[2] < 960;
+  if (early && !/pulang awal/i.test(t) && ['ontime', 'pulang', 'telat'].includes(r.k)) t += ' · Pulang awal (sebelum 16.00)';
+  return t;
+};
 const jam = a => {
   if (!a) return '';
   const m = String(a).match(/^(\d{1,2})[.:](\d{2})\s*-\s*(?:(\d{1,2})[.:](\d{2})|\?)$/);
@@ -378,7 +385,7 @@ function paintDetail() {
     const mo = r.d.slice(0, 7);
     if (mo !== cur) { cur = mo; html += `<div class="mh">${monthLbl(mo)} · ${list.filter(x => x.d.startsWith(mo)).length} hari</div>`; }
     const noOut = /-\s*\?$/.test(r.a || '');
-    html += `<div class="li"><span class="ic k-${r.k}">${ic(r.k === 'telat' || r.k === 'ontime' ? 'clock' : 'check', 18)}</span><div><b>${esc(fmtD(r.d))}</b><small>${esc(r.s)}${noOut ? ' · jam pulang belum tercatat' : ''}</small></div><span class="jam">${jam(r.a)}</span></div>`;
+    html += `<div class="li"><span class="ic k-${r.k}">${ic(r.k === 'telat' || r.k === 'ontime' ? 'clock' : 'check', 18)}</span><div><b>${esc(fmtD(r.d))}</b><small>${esc(KET(r))}${noOut ? ' · jam pulang belum tercatat' : ''}</small></div><span class="jam">${jam(r.a)}</span></div>`;
   }
   el.innerHTML = `<header><button class="icon-btn" id="dback" aria-label="Kembali">${ic('back')}</button><div class="ct"><div style="min-width:0"><b>Detail Absensi</b><small>${esc(attKind === 'all' ? 'Semua status' : KINDS[attKind])} · ${list.length} hari</small></div></div><button class="chip" data-sort style="margin-left:auto;margin-right:12px">${attSort === 'desc' ? 'Terbaru' : 'Terlama'}</button></header>
     <div class="chips" style="margin:0;padding:10px 16px">${chips.map(([k, l, n]) => `<button class="chip ${attKind === k ? 'on' : ''}" data-ak="${k}">${l}<b>${n}</b></button>`).join('')}</div>
