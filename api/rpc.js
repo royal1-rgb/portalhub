@@ -114,9 +114,20 @@ async function route(d, ip) {
       await q('DELETE FROM sessions WHERE uid = $1 AND hash <> $2', [uid, hash]); // perangkat lain diminta login ulang
       return { type: 'pin_ok' };
     }
-    case 'addemp': case 'setquota': {
+    case 'addemp': case 'setquota': case 'delemp': {
       const res = await mutate(async db => {
         if (!(db.users[uid] || {}).admin) return { type: 'emp_err', msg: 'Hanya admin yang dapat melakukan ini.' };
+        if (d.a === 'delemp') {
+          const tg = db.users[d.id]; if (!tg) return { type: 'noop' };
+          if (tg.id === uid) return { type: 'emp_err', msg: 'Kamu tidak dapat menghapus akunmu sendiri.' };
+          if (tg.admin) return { type: 'emp_err', msg: 'Akun admin tidak dapat dihapus.' };
+          delete db.users[tg.id]; (db.deleted = db.deleted || {})[tg.id] = 1; // penanda agar tidak dibuat ulang dari employees.json
+          if (db.cuti) { if (db.cuti.rows) delete db.cuti.rows[tg.id]; if (db.cuti.quotas) delete db.cuti.quotas[tg.id]; }
+          await q('DELETE FROM sessions WHERE uid = $1', [tg.id]); await q('DELETE FROM presence WHERE uid = $1', [tg.id]);
+          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]);
+          await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [tg.id]);
+          return { type: 'emp_del', id: tg.id, name: tg.name, changed: 1 };
+        }
         if (d.a === 'setquota') {
           const tg = db.users[d.id], v = L.validQ(d.quota); if (!tg) return { type: 'noop' };
           if (v == null) return { type: 'quota_err', msg: 'Jatah harus berupa angka 0–366.' };
@@ -130,7 +141,7 @@ async function route(d, ip) {
         if (!/^\d{6}$/.test(pin)) return { type: 'emp_err', msg: 'PIN awal harus 6 angka.' };
         if (js !== '' && jatah == null) return { type: 'emp_err', msg: 'Jatah cuti harus berupa angka 0–366.' };
         const id = L.userId(name); if (db.users[id]) return { type: 'emp_err', msg: `${db.users[id].name} sudah terdaftar.` };
-        const nu = (db.users[id] = { id, name: L.nice(name), title, pinChanged: false }); if (jatah != null) nu.quota = jatah;
+        if (db.deleted) delete db.deleted[id]; const nu = (db.users[id] = { id, name: L.nice(name), title, pinChanged: false }); if (jatah != null) nu.quota = jatah;
         await L.setPin(nu, pin); return { type: 'emp_ok', name: nu.name, pin, changed: 1 };
       });
       if (res.changed) await bumpVer();
