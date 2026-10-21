@@ -116,3 +116,5 @@ h3.h{margin:0;font:600 18px/26px var(--ff)}
 .li .ic.k-telat{background:#fffbeb;color:#b45309;border-radius:50%}.li .ic.k-alpha{background:#fef2f2;color:var(--err);border-radius:50%}.li .ic.k-ontime{background:#ecfdf5;color:#047857;border-radius:50%}
 nav button{min-width:56px}
 .fl{font:600 12px/16px var(--ff);color:#334155}.drow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.drow input{min-width:0}
+
+.db{flex:none;margin-left:6px;width:32px;height:32px;min-height:32px;border-radius:99px;background:#fef2f2;color:var(--err);display:grid;place-items:center}
