@@ -39,7 +39,7 @@ async function api(body) {
     const d = await r.json(); if (!connected) { connected = true; paintOff(); } return d;
   } catch { if (connected) { connected = false; paintOff(); } return null; }
 }
-const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota'];
+const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota', 'delemp'];
 function send(d) {
   if (!SEND.includes(d.type)) return Promise.resolve(null);
   return api({ ...d, a: d.type }).then(r => { if (r && r.type && !['noop', 'bye'].includes(r.type)) handle(r); return r; });
@@ -74,6 +74,7 @@ function handle(d) {
   else if (d.type === 'auth_error') {
     if (d.resume) { session = null; authed = false; clearTimeout(pollT); ls.del('hub-session'); showLogin(); } else loginErr(d.msg);
   } else if (d.type === 'emp_ok') empMsg(`${d.name} berhasil ditambahkan. PIN awal: ${d.pin}`, true);
+  else if (d.type === 'emp_del') { users.delete(d.id); delete quotas[d.id]; if (open && open.includes(d.id)) { open = null; $('#chat').hidden = true; $('#chat').innerHTML = ''; } render(); if (empPaint) empPaint(); empMsg(`${d.name} berhasil dihapus.`, true, true); }
   else if (d.type === 'emp_err') empMsg(d.msg, false);
   else if (d.type === 'cuti') { cuti = d.cuti; if (tab === 'me') render(); const ci = $('#cinfo'); if (ci) ci.innerHTML = cutiInfo(); }
   else if (d.type === 'quotas') { quotas = d.map; if (empPaint) empPaint(); }
@@ -428,22 +429,26 @@ function empSheet() {
     <label class="fld"><span>PIN awal (6 angka)</span><input id="ep" type="text" inputmode="numeric" maxlength="6" placeholder="Kosongkan untuk 123456" autocomplete="off"></label>
     <label class="fld"><span>Jatah cuti per tahun (hari)</span><input id="ej" type="text" inputmode="decimal" maxlength="5" placeholder="Kosongkan untuk 12" autocomplete="off"></label>
     <div class="err" id="eerr" role="alert"></div><button class="btn" type="submit">${ic('plus', 18)}Tambah Karyawan</button>
-    <div class="sec"><h3 class="h" style="font-size:14px">Terdaftar (<span id="ecnt"></span>)</h3><small style="color:var(--ink2)">Ketuk jatah untuk mengubah</small></div>
+    <div class="sec"><h3 class="h" style="font-size:14px">Terdaftar (<span id="ecnt"></span>)</h3><small style="color:var(--ink2)">Ketuk jatah untuk mengubah · ✕ untuk menghapus</small></div>
     <div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="eq" type="search" placeholder="Cari nama atau jabatan..." autocomplete="off"></div><div id="elist"></div></form>`;
   const paint = () => {
     const t = $('#eq').value.trim().toLowerCase(), list = [...users.values()].sort((a, b) => a.name.localeCompare(b.name));
     $('#ecnt').textContent = list.length;
-    $('#elist').innerHTML = list.filter(x => !t || (x.name + ' ' + x.title).toLowerCase().includes(t)).map(x => `<div class="li">${av(x, 's')}<div><b>${esc(x.name)}</b><small>${esc(x.title)}</small></div><button type="button" class="qb ${(quotas[x.id] || {}).src === 'file' ? 'f' : ''}" data-q="${x.id}" aria-label="Ubah jatah cuti ${esc(x.name)}">Jatah ${quotas[x.id] ? nf(quotas[x.id].q) : '…'}</button></div>`).join('') || '<div class="empty">Tidak ditemukan.</div>';
+    $('#elist').innerHTML = list.filter(x => !t || (x.name + ' ' + x.title).toLowerCase().includes(t)).map(x => `<div class="li">${av(x, 's')}<div><b>${esc(x.name)}</b><small>${esc(x.title)}</small></div><button type="button" class="qb ${(quotas[x.id] || {}).src === 'file' ? 'f' : ''}" data-q="${x.id}" aria-label="Ubah jatah cuti ${esc(x.name)}">Jatah ${quotas[x.id] ? nf(quotas[x.id].q) : '…'}</button>${x.id === me || x.admin ? '' : `<button type="button" class="db" data-del="${x.id}" aria-label="Hapus ${esc(x.name)}">${ic('close', 16)}</button>`}</div>`).join('') || '<div class="empty">Tidak ditemukan.</div>';
   };
   paint(); $('#eq').oninput = paint; empPaint = paint;
   $('#ep').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); };
   sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) { sh.hidden = true; empPaint = null; } };
+  $('#elist').onclick = e => {
+    const b = e.target.closest('[data-del]'); if (!b) return; const u = users.get(b.dataset.del); if (!u) return;
+    if (confirm(`Hapus karyawan ${u.name}?\n\nAkun, data cuti, data absensi, dan pesannya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`)) send({ type: 'delemp', id: u.id });
+  };
   $('#ef').onsubmit = e => { e.preventDefault(); send({ type: 'addemp', name: $('#en').value, title: $('#et').value, pin: $('#ep').value, jatah: $('#ej').value }); };
 }
-function empMsg(m, ok) {
+function empMsg(m, ok, keep) {
   const e = $('#eerr'); if (!e) return;
   e.textContent = m; e.style.color = ok ? 'var(--sec)' : 'var(--err)';
-  if (ok) { ['#en', '#et', '#ep', '#ej'].forEach(i => ($(i).value = '')); $('#en').focus(); }
+  if (ok && !keep) { ['#en', '#et', '#ep', '#ej'].forEach(i => ($(i).value = '')); $('#en').focus(); }
 }
 function pinErr(m) { const e = $('#perr'); if (e) e.textContent = m; }
 function pinDone() {
