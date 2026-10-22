@@ -158,13 +158,23 @@ function renderChat() {
   }).join('') : '<div class="empty">Tidak ada percakapan yang cocok.</div>';
 }
 
+const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+let clockT = null;
+function tickClock() {
+  const el = $('#clk'); if (!el || tab !== 'home') { clearInterval(clockT); clockT = null; return; }
+  const d = new Date(), p2 = n => String(n).padStart(2, '0'), off = -d.getTimezoneOffset() / 60, zone = { 7: 'WIB', 8: 'WITA', 9: 'WIT' }[off] || 'GMT' + (off >= 0 ? '+' : '') + off;
+  $('#ck-t').textContent = `${p2(d.getHours())}:${p2(d.getMinutes())} ${zone}`;
+  $('#ck-h').textContent = HARI[d.getDay()]; $('#ck-d').textContent = `${d.getDate()} ${BLN[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
+}
 function renderHome() {
   const u = users.get(me), on = [...users.values()].filter(x => x.online).length, n = totalUnread();
-  $('#main').innerHTML = `<div class="hero"><p>Selamat datang kembali</p><h2>${esc(u.name.split(' ')[0])}</h2><p>${esc(u.title)}</p></div>
+  $('#main').innerHTML = `<div class="hero hr"><div class="hl"><p>Selamat datang kembali</p><h2>${esc(u.name.split(' ')[0])}</h2><p>${esc(u.title)}</p></div>
+    <div class="hc" id="clk"><b id="ck-t">--:--</b><span id="ck-h"></span><span id="ck-d"></span></div></div>
     <div class="tiles"><button class="card" data-go="chat" style="text-align:left"><b>${n}</b><span>Pesan belum dibaca</span></button><div class="card"><b>${on}</b><span>Rekan online</span></div></div>
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
     <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
+  tickClock(); clearInterval(clockT); clockT = setInterval(tickClock, 5000);
   const saved = filter; filter = 'all'; q = '';
   const items = convIds().filter(c => last(c)).sort((a, b) => last(b).time - last(a).time).slice(0, 3);
   $('#hthreads').innerHTML = items.length ? items.map(c => { const m = meta(c), l = last(c); return `<button class="th ${unread(c) ? 'u' : ''}" data-c="${esc(c)}">${m.av}<div class="bd"><div class="r1"><span class="nm">${esc(m.name)}</span><time>${shortT(l.time)}</time></div><p>${esc(l.text)}</p></div></button>`; }).join('') : '<div class="empty">Belum ada obrolan.</div>';
