@@ -317,6 +317,7 @@ const KET = r => { // keterangan detail: dalam toleransi (<=15 menit) bukan terl
   if (r.k !== 'telat' && /terlambat/i.test(t)) t = t.replace(/(datang\s+)?terlambat/i, 'Toleransi').replace(r.m > 15 ? /\s*\d+\s*menit/i : /$^/, '');
   const o = String(r.a || '').match(/-\s*(\d{1,2})[.:](\d{2})\s*$/), early = o && +o[1] * 60 + +o[2] < 960;
   if (early && !/pulang awal/i.test(t) && ['ontime', 'pulang', 'telat'].includes(r.k)) t += ' · Pulang awal (sebelum 16.00)';
+  if (r.k === 'ontime' && /pulang awal/i.test(t)) t = /^\s*pulang awal/i.test(t) ? 'Tepat Waktu' : t.replace(/\s*dan\s+pulang awal(\s+\d+\s*menit)?/i, '');
   return t;
 };
 const jam = a => {
