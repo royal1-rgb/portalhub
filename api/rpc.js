@@ -86,7 +86,11 @@ async function route(d, ip) {
   switch (d.a) {
     case 'resume': case 'snapshot': return snapshot(uid, d.session);
     case 'poll': return poll(uid, d);
-    case 'logout': await q('DELETE FROM sessions WHERE hash = $1', [hash]); return { type: 'bye' };
+    case 'logout': // riwayat obrolan tidak disimpan: hapus pesan yang dikirim user ini dan semua obrolan pribadinya
+      await q('DELETE FROM sessions WHERE hash = $1', [hash]);
+      await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
+      await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
+      await bumpVer(); return { type: 'bye' };
     case 'send': {
       const text = L.clean(d.text, 2000), conv = String(d.conv || '');
       if (!text || !memberOf(await getDb(), conv, uid)) return { type: 'noop' };
