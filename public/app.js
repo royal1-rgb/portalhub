@@ -490,7 +490,7 @@ document.addEventListener('click', e => {
   else if (t.id === 'bell') { tab = 'chat'; filter = 'unread'; render(); }
   else if (t.id === 'meBtn') { tab = 'me'; render(); }
   else if (t.id === 'copy') { const s = t.querySelector('span:last-child') || t; try { navigator.clipboard.writeText(location.origin); } catch {} s.textContent = 'Alamat disalin'; setTimeout(render, 1200); }
-  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }); ls.del('hub-session'); location.reload(); }
+  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); location.reload(); }); }
 });
 
 $('#nav').innerHTML = ''; $('#title').textContent = TITLES.chat;
