@@ -314,7 +314,7 @@ const fmtLong = d => { const [y, m, dd] = d.split('-').map(Number); return new D
 const monthLbl = mo => new Date(+mo.slice(0, 4), +mo.slice(5, 7) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 const KET = r => { // keterangan detail: dalam toleransi (<=15 menit) bukan terlambat; pulang sebelum 16.00 = pulang awal
   let t = r.s;
-  if (r.k !== 'telat' && r.m != null && r.m <= 15 && /terlambat/i.test(t)) t = t.replace(/(datang\s+)?terlambat/i, 'Toleransi');
+  if (r.k !== 'telat' && /terlambat/i.test(t)) t = t.replace(/(datang\s+)?terlambat/i, 'Toleransi').replace(r.m > 15 ? /\s*\d+\s*menit/i : /$^/, '');
   const o = String(r.a || '').match(/-\s*(\d{1,2})[.:](\d{2})\s*$/), early = o && +o[1] * 60 + +o[2] < 960;
   if (early && !/pulang awal/i.test(t) && ['ontime', 'pulang', 'telat'].includes(r.k)) t += ' · Pulang awal (sebelum 16.00)';
   return t;
