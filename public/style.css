@@ -162,3 +162,11 @@ main.nw .nseg{margin:0}
 .hgo:disabled{background:rgba(255,255,255,.22);color:rgba(255,255,255,.8);box-shadow:none}
 @media(max-width:350px){.hmap{width:112px;height:112px}.htm{font-size:34px}}
 .tiles{margin-top:12px}
+
+.hi span{min-width:0}
+.mdl{position:fixed;inset:0;z-index:3000;background:rgba(11,28,48,.5);display:flex;align-items:center;justify-content:center;padding:24px;animation:mdf .15s ease}
+.mdb{width:100%;max-width:340px;background:#fff;border-radius:20px;padding:22px 20px 18px;text-align:center;box-shadow:0 20px 50px -10px rgba(7,30,90,.45)}
+.mdi{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:#fef3c7;color:#b45309;display:grid;place-items:center}
+.mdb h3{margin:0 0 6px;font:700 18px/26px var(--ff)}.mdb p{margin:0 0 8px;color:var(--ink2);font-size:13px;line-height:20px}.mdb p.mq{color:var(--ink);font-weight:600}
+.mda{display:flex;gap:10px;margin-top:14px}.mda .btn{flex:1;margin:0}
+@keyframes mdf{from{opacity:0}to{opacity:1}}
