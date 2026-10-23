@@ -640,6 +640,6 @@ document.addEventListener('click', e => {
   else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); location.reload(); }); }
 });
 
-$('#nav').innerHTML = ''; $('#title').textContent = TITLES.chat;
+$('#nav').innerHTML = ''; $('#title').textContent = TITLES.home;
 start();
 })();
