@@ -1,7 +1,7 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
@@ -114,19 +114,25 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', me: 'Profil Karyawan' };
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', news: 'Berita Dunia Kerja', me: 'Profil Karyawan' };
 function render() {
   if (!me) return;
   const u = users.get(me), n = totalUnread();
-  $('#title').textContent = TITLES[tab];
+  $('#title').textContent = TITLES[tab]; $('#main').classList.toggle('nw', tab === 'news');
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
-  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['att', 'clock', 'Absensi'], ['me', 'person', 'Profil']].map(([k, i, l]) =>
+  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['att', 'clock', 'Absensi'], ['news', 'news', 'News'], ['me', 'person', 'Profil']].map(([k, i, l]) =>
     `<button data-tab="${k}" class="${tab === k ? 'on' : ''}"${tab === k ? ' aria-current="page"' : ''}><span style="position:relative">${ic(i)}${k === 'chat' && n ? `<span class="badge">${n}</span>` : ''}</span>${l}</button>`).join('');
-  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else renderMe();
+  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'news') renderNews(); else renderMe();
 }
 
+const NEWS_URL = 'https://www.okezone.com/tag/dunia-kerja';
+function renderNews() {
+  const m = $('#main'); m.classList.add('nw');
+  m.innerHTML = `<div class="nbar"><span>Okezone · Dunia Kerja</span><a href="${NEWS_URL}" target="_blank" rel="noopener noreferrer">Buka di tab baru ${ic('chev', 14)}</a></div>
+    <div class="nfr"><div class="nld">Memuat berita…<small>Jika tidak tampil, ketuk "Buka di tab baru".</small></div><iframe src="${NEWS_URL}" title="Okezone Dunia Kerja" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe></div>`;
+}
 function renderChat() {
   const main = $('#main');
   if (!$('#q')) {
