@@ -118,7 +118,7 @@ const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karya
 function render() {
   if (!me) return;
   const u = users.get(me), n = totalUnread();
-  $('#title').textContent = TITLES[tab]; $('#main').classList.toggle('nw', tab === 'news');
+  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk;
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
@@ -127,11 +127,33 @@ function render() {
   if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'news') renderNews(); else renderMe();
 }
 
-const NEWS_URL = 'https://www.okezone.com/tag/dunia-kerja';
-function renderNews() {
-  const m = $('#main'); m.classList.add('nw');
-  m.innerHTML = `<div class="nbar"><span>Okezone · Dunia Kerja</span><a href="${NEWS_URL}" target="_blank" rel="noopener noreferrer">Buka di tab baru ${ic('chev', 14)}</a></div>
-    <div class="nfr"><div class="nld">Memuat berita…<small>Jika tidak tampil, ketuk "Buka di tab baru".</small></div><iframe src="${NEWS_URL}" title="Okezone Dunia Kerja" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe></div>`;
+const NEWS_URL = 'https://www.okezone.com/tag/dunia-kerja', NCATS = [['bisnis', 'Bisnis'], ['ekonomi', 'Ekonomi'], ['terkini', 'Terkini'], ['lifestyle', 'Lifestyle']];
+let newsSrc = 'antara', newsCat = 'bisnis', newsMem = {};
+const isPC = () => window.matchMedia('(min-width: 900px) and (pointer: fine)').matches;
+const ago = t => { const m = Math.max(0, Math.round((Date.now() - t) / 6e4)); return !t ? '' : m < 60 ? `${m || 1} mnt lalu` : m < 1440 ? `${Math.floor(m / 60)} jam lalu` : m < 10080 ? `${Math.floor(m / 1440)} hari lalu` : new Date(t).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); };
+function renderNews(force) {
+  const m = $('#main'), key = newsSrc + newsCat;
+  if (!force && m.dataset.nk === key && m.firstChild) { if (newsSrc === 'okezone' && !isPC()) m.classList.add('nw'); return; } // render ulang karena pesan baru tidak boleh memuat ulang halaman
+  m.dataset.nk = key;
+  const seg = `<div class="nseg"><button data-ns="antara" class="${newsSrc === 'antara' ? 'on' : ''}">ANTARA News</button><button data-ns="okezone" class="${newsSrc === 'okezone' ? 'on' : ''}">Okezone</button></div>`;
+  if (newsSrc === 'okezone') {
+    if (isPC()) {
+      m.innerHTML = seg + `<div class="card nwc"><div class="nwi">${ic('news', 30)}</div><h3>Okezone · Dunia Kerja</h3><p>Okezone tidak mengizinkan halamannya ditampilkan di dalam aplikasi pada tampilan komputer. Buka langsung di tab baru, atau akses Hub dari ponsel.</p><a class="btn" href="${NEWS_URL}" target="_blank" rel="noopener noreferrer">Buka Okezone Dunia Kerja</a></div>`;
+    } else {
+      m.classList.add('nw');
+      m.innerHTML = `<div style="padding:0 16px">${seg}</div><div class="nbar"><span>Okezone · Dunia Kerja</span><a href="${NEWS_URL}" target="_blank" rel="noopener noreferrer">Buka di tab baru ${ic('chev', 14)}</a></div>
+        <div class="nfr"><div class="nld">Memuat berita…<small>Jika tidak tampil, ketuk "Buka di tab baru".</small></div><iframe src="${NEWS_URL}" title="Okezone Dunia Kerja" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe></div>`;
+    }
+    return;
+  }
+  m.innerHTML = seg + `<div class="chips nchips">${NCATS.map(([k, l]) => `<button class="chip ${newsCat === k ? 'on' : ''}" data-nc="${k}">${l}</button>`).join('')}</div><div id="nlist"></div>
+    <p class="nsrc">Sumber: <a href="https://www.antaranews.com" target="_blank" rel="noopener noreferrer">ANTARA News</a> (RSS resmi). Ketuk berita untuk membaca selengkapnya di situs aslinya.</p>`;
+  const c = newsCat, hit = newsMem[c], el = $('#nlist');
+  const paint = d => { if (newsCat !== c || !$('#nlist')) return; $('#nlist').innerHTML = d.items.length ? d.items.map(x => `<a class="nw-i" href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}<div><b>${esc(x.title)}</b><p>${esc(x.sum)}</p><small>${esc(ago(x.time))}</small></div></a>`).join('') : '<div class="empty">Belum ada berita.</div>'; };
+  if (hit && Date.now() - hit.t < 6e5) return paint(hit);
+  el.innerHTML = '<div class="empty">Memuat berita…</div>';
+  fetch('/api/news?c=' + c).then(r => r.json()).then(d => { if (!d.ok) throw 0; newsMem[c] = { t: Date.now(), items: d.items }; paint(newsMem[c]); })
+    .catch(() => { if (newsCat === c && $('#nlist')) $('#nlist').innerHTML = hit ? (paint(hit), '') : '<div class="empty">Berita belum dapat dimuat. Coba lagi beberapa saat.</div>'; });
 }
 function renderChat() {
   const main = $('#main');
@@ -483,8 +505,10 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
   if (!t) return;
+  if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
+  if (t.dataset.nc) { newsCat = t.dataset.nc; renderNews(true); return; }
   if (t.dataset.tab) { tab = t.dataset.tab; render(); $('#main').scrollTop = 0; }
   else if (t.dataset.q) {
     const u = users.get(t.dataset.q), cur = (quotas[t.dataset.q] || {}).q;
