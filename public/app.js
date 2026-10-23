@@ -293,7 +293,7 @@ function mountCard() {
 }
 function renderHome() {
   const u = users.get(me), on = [...users.values()].filter(x => x.online).length, n = totalUnread();
-  $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} 👋</h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
+  $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
     <div id="hcslot"></div>
     <div class="tiles"><button class="card" data-go="chat" style="text-align:left"><b>${n}</b><span>Pesan belum dibaca</span></button><div class="card"><b>${on}</b><span>Rekan online</span></div></div>
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
