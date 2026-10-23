@@ -310,7 +310,7 @@ function renderMe() {
   const u = users.get(me);
   $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${admin ? `<button class="card li" id="emp" style="width:100%;padding:16px 20px"><span class="ic">${ic('group', 20)}</span><div><b>Kelola Karyawan</b><small>Tambah karyawan agar bisa login · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="cutiAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('file', 20)}</span><div><b>Data Cuti</b><small>Unggah ulang berkas Excel cuti · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="attAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('clock', 20)}</span><div><b>Data Absensi</b><small>Unggah ulang berkas Excel absensi · Admin</small></div>${ic('chev', 20)}</button>` : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
     ${cutiHTML()}<div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
-    <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Hub Karyawan 1.0 · Jaringan lokal</div>`;
+    <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Portal Hub 1.0 · Mekar Jaya Sentosa</div>`;
 }
 
 // ---------- ruang obrolan ----------
