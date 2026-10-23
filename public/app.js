@@ -192,7 +192,7 @@ function renderChat() {
 
 // ---------- Kehadiran hari ini (check-in GPS) ----------
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.875116155353869, lng: 109.67663296836024, r: 100 };
+let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.875116155353869, lng: 109.67663296836024, r: 20 };
 const wibHM = ts => new Date(ts + 7 * 36e5).toISOString().slice(11, 16);
 const gDist = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742000 * Math.asin(Math.min(1, Math.sqrt(h))); };
 const hq = x => hc.querySelector(x);
