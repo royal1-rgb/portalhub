@@ -39,7 +39,7 @@ async function api(body) {
     const d = await r.json(); if (!connected) { connected = true; paintOff(); } return d;
   } catch { if (connected) { connected = false; paintOff(); } return null; }
 }
-const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota', 'delemp', 'checkin'];
+const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota', 'delemp', 'checkin', 'checkout'];
 function send(d) {
   if (!SEND.includes(d.type)) return Promise.resolve(null);
   return api({ ...d, a: d.type }).then(r => { if (r && r.type && !['noop', 'bye'].includes(r.type)) handle(r); return r; });
@@ -76,7 +76,9 @@ function handle(d) {
   } else if (d.type === 'emp_ok') empMsg(`${d.name} berhasil ditambahkan. PIN awal: ${d.pin}`, true);
   else if (d.type === 'emp_del') { users.delete(d.id); delete quotas[d.id]; if (open && open.includes(d.id)) { open = null; $('#chat').hidden = true; $('#chat').innerHTML = ''; } render(); if (empPaint) empPaint(); empMsg(`${d.name} berhasil dihapus.`, true, true); }
   else if (d.type === 'checkin_ok') { ci = d.ci; hcBusy = false; hcMsg = ''; addAttRow(d.ci.row); updHc(); if (tab === 'att') render(); }
-  else if (d.type === 'checkin_err') { hcBusy = false; hcMsg = d.msg; updHc(); }
+  else if (d.type === 'checkout_ok') { ci = d.ci; hcBusy = false; hcMsg = ''; addAttRow(d.ci.row); updHc(); if (tab === 'att') render(); }
+  else if (d.type === 'checkout_confirm') { hcBusy = false; updHc(); askEarlyOut(d.hm); }
+  else if (d.type === 'checkin_err' || d.type === 'checkout_err') { hcBusy = false; hcMsg = d.msg; updHc(); }
   else if (d.type === 'emp_err') empMsg(d.msg, false);
   else if (d.type === 'cuti') { cuti = d.cuti; if (tab === 'me') render(); const ci = $('#cinfo'); if (ci) ci.innerHTML = cutiInfo(); }
   else if (d.type === 'quotas') { quotas = d.map; if (empPaint) empPaint(); }
@@ -215,7 +217,7 @@ function stopGeo() { if (geoW != null) { navigator.geolocation.clearWatch(geoW);
 const geoInside = () => geo.st === 'ok' && geo.acc <= 150 && gDist(geo.lat, geo.lng, office.lat, office.lng) <= office.r;
 function addAttRow(r) { // check-in baru -> data check-in (terpisah dari data unggahan admin)
   if (!attC) attC = { has: true, file: 'Check-in GPS', total: 0, people: 1, from: r.d, to: r.d, updatedAt: Date.now(), by: 'Check-in GPS', rows: [] };
-  if (!attC.rows.some(x => x.d === r.d)) {
+  attC.rows = attC.rows.filter(x => x.d !== r.d); {
     attC.rows.push(r); attC.rows.sort((a, b) => (a.d < b.d ? 1 : -1)); attC.total = attC.rows.length; attC.updatedAt = Date.now();
     if (r.d < attC.from) attC.from = r.d; if (r.d > attC.to) attC.to = r.d;
   }
@@ -228,11 +230,23 @@ function buildCard() {
     <div class="hmap"><div class="hm"></div><button type="button" class="hpill wait"></button><span class="hattr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></span></div></div>
     <p class="hmsg" hidden></p><button type="button" class="hgo"></button>`;
   hq('.hpill').onclick = () => { if (['denied', 'err', 'nogeo', 'insecure'].includes(geo.st)) startGeo(true); };
-  hq('.hgo').onclick = () => {
-    if (ci || hcBusy || !geoInside()) return;
-    hcBusy = true; hcMsg = ''; updHc();
-    send({ type: 'checkin', lat: geo.lat, lng: geo.lng, acc: geo.acc }).then(r => { if (!r) { hcBusy = false; hcMsg = 'Gagal terhubung ke server. Coba lagi.'; updHc(); } });
-  };
+  hq('.hgo').onclick = () => doGo(false);
+}
+function doGo(confirm) {
+  if ((ci && ci.out) || hcBusy || !geoInside()) return;
+  hcBusy = true; hcMsg = ''; updHc();
+  send({ type: ci ? 'checkout' : 'checkin', lat: geo.lat, lng: geo.lng, acc: geo.acc, confirm: !!confirm }).then(r => { if (!r) { hcBusy = false; hcMsg = 'Gagal terhubung ke server. Coba lagi.'; updHc(); } });
+}
+function askEarlyOut(hm) { // peringatan check out sebelum jam pulang kerja (16.00)
+  let m = $('#early'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'early'; m.className = 'mdl';
+  m.innerHTML = `<div class="mdb" role="alertdialog" aria-modal="true" aria-labelledby="eh"><div class="mdi">${ic('clock', 26)}</div><h3 id="eh">Belum Jam Pulang Kerja</h3>
+    <p>Sekarang pukul <b>${esc(hm.replace(':', '.'))} WIB</b>. Jam pulang kerja adalah pukul <b>16.00</b>. Jika check out sekarang, kamu dicatat <b>pulang awal</b>.</p><p class="mq">Apakah kamu yakin ingin check out?</p>
+    <div class="mda"><button type="button" class="btn sec2" data-n>Tidak</button><button type="button" class="btn" data-y>Ya</button></div></div>`;
+  const close = () => { m.remove(); document.removeEventListener('keydown', esc_); }, esc_ = e => { if (e.key === 'Escape') close(); };
+  m.querySelector('[data-n]').onclick = close; m.onclick = e => { if (e.target === m) close(); };
+  m.querySelector('[data-y]').onclick = () => { close(); doGo(true); };
+  document.addEventListener('keydown', esc_); document.body.appendChild(m); m.querySelector('[data-n]').focus();
 }
 function initMap() {
   if (hcMap || !hc.isConnected || !hq('.hm').offsetWidth) return;
@@ -261,13 +275,14 @@ function updHc() {
   const dist = geo.st === 'ok' ? Math.round(gDist(geo.lat, geo.lng, office.lat, office.lng)) : 0, pill = hq('.hpill'), bd = hq('.hbd'), go = hq('.hgo'), msg = hq('.hmsg');
   const P = { wait: ['wait', 'Mencari lokasi…'], denied: ['bad', 'Izin lokasi ditolak'], err: ['bad', 'Lokasi tidak tersedia'], nogeo: ['bad', 'GPS tidak didukung'], insecure: ['bad', 'Perlu koneksi HTTPS'], idle: ['wait', 'Mencari lokasi…'] }[geo.st] || (geo.acc > 150 ? ['warn', 'Sinyal GPS lemah'] : inside ? ['ok', 'Lokasi Valid'] : ['warn', `Di luar area · ${dist >= 1000 ? (dist / 1000).toFixed(1) + ' km' : dist + ' m'}`]);
   pill.className = 'hpill ' + P[0]; pill.textContent = P[1];
-  const late = ci && ci.row.k === 'telat';
-  bd.className = 'hbd ' + (ci ? (late ? 'late' : 'ok') : 'no'); bd.innerHTML = ci ? (late ? 'Terlambat' : `Hadir ${ic('check', 13)}`) : 'Belum Check-in';
-  hq('.hi').innerHTML = ci ? `${ic('clock', 14)}Check in ${wibHM(ci.ts)} WIB` : inside ? `${ic('clock', 14)}Kamu berada di area kantor` : geo.st === 'denied' ? 'Aktifkan izin lokasi di browser, lalu ketuk label di peta.' : `${ic('clock', 14)}Belum check in hari ini`;
-  go.disabled = !!ci || hcBusy || !inside;
-  go.innerHTML = ci ? `${ic('check', 18)}Sudah Check In` : hcBusy ? 'Memproses…' : `${ic('clock', 18)}Check In`;
+  const late = ci && ci.row.k === 'telat', early = ci && ci.out && ci.row.k === 'pulang';
+  bd.className = 'hbd ' + (ci ? (late || early ? 'late' : 'ok') : 'no'); bd.innerHTML = ci ? (late ? 'Terlambat' : early ? 'Pulang Awal' : `Hadir ${ic('check', 13)}`) : 'Belum Check-in';
+  hq('.hi').innerHTML = ci ? `${ic('clock', 14)}<span>Check in ${wibHM(ci.ts)} WIB${ci.out ? `<br>Check out ${wibHM(ci.out)} WIB` : ''}</span>` : inside ? `${ic('clock', 14)}Kamu berada di area kantor` : geo.st === 'denied' ? 'Aktifkan izin lokasi di browser, lalu ketuk label di peta.' : `${ic('clock', 14)}Belum check in hari ini`;
+  const done = !!(ci && ci.out);
+  go.disabled = done || hcBusy || !inside;
+  go.innerHTML = done ? `${ic('check', 18)}Sudah Check Out` : hcBusy ? 'Memproses…' : ci ? `${ic('out', 18)}Check Out` : `${ic('clock', 18)}Check In`;
   msg.hidden = !hcMsg; msg.textContent = hcMsg;
-  if (!ci && !hcBusy && !inside && geo.st === 'ok' && geo.acc <= 150 && !hcMsg) { msg.hidden = false; msg.textContent = `Check In aktif saat kamu berada dalam ${office.r} m dari lokasi kantor.`; }
+  if (!done && !hcBusy && !inside && geo.st === 'ok' && geo.acc <= 150 && !hcMsg) { msg.hidden = false; msg.textContent = `${ci ? 'Check Out' : 'Check In'} aktif saat kamu berada dalam ${office.r} m dari lokasi kantor.`; }
   updMap();
 }
 function mountCard() {
