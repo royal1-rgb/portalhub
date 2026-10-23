@@ -292,7 +292,7 @@ function mountCard() {
   updHc(); initMap(); if (hcMap) updMap();
 }
 function renderHome() {
-  const u = users.get(me), on = [...users.values()].filter(x => x.online).length, n = totalUnread();
+  const u = users.get(me);
   $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
     <div id="hcslot"></div>
     
