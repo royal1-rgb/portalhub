@@ -39,7 +39,7 @@ async function api(body) {
     const d = await r.json(); if (!connected) { connected = true; paintOff(); } return d;
   } catch { if (connected) { connected = false; paintOff(); } return null; }
 }
-const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota', 'delemp'];
+const SEND = ['login', 'send', 'read', 'changepin', 'logout', 'addemp', 'setquota', 'delemp', 'checkin'];
 function send(d) {
   if (!SEND.includes(d.type)) return Promise.resolve(null);
   return api({ ...d, a: d.type }).then(r => { if (r && r.type && !['noop', 'bye'].includes(r.type)) handle(r); return r; });
@@ -75,6 +75,8 @@ function handle(d) {
     if (d.resume) { session = null; authed = false; clearTimeout(pollT); ls.del('hub-session'); showLogin(); } else loginErr(d.msg);
   } else if (d.type === 'emp_ok') empMsg(`${d.name} berhasil ditambahkan. PIN awal: ${d.pin}`, true);
   else if (d.type === 'emp_del') { users.delete(d.id); delete quotas[d.id]; if (open && open.includes(d.id)) { open = null; $('#chat').hidden = true; $('#chat').innerHTML = ''; } render(); if (empPaint) empPaint(); empMsg(`${d.name} berhasil dihapus.`, true, true); }
+  else if (d.type === 'checkin_ok') { ci = d.ci; hcBusy = false; hcMsg = ''; addAttRow(d.ci.row); updHc(); if (tab === 'att') render(); }
+  else if (d.type === 'checkin_err') { hcBusy = false; hcMsg = d.msg; updHc(); }
   else if (d.type === 'emp_err') empMsg(d.msg, false);
   else if (d.type === 'cuti') { cuti = d.cuti; if (tab === 'me') render(); const ci = $('#cinfo'); if (ci) ci.innerHTML = cutiInfo(); }
   else if (d.type === 'quotas') { quotas = d.map; if (empPaint) empPaint(); }
@@ -84,7 +86,7 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; cuti = d.cuti; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
@@ -118,7 +120,7 @@ const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karya
 function render() {
   if (!me) return;
   const u = users.get(me), n = totalUnread();
-  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk;
+  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'home') stopGeo();
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
@@ -186,23 +188,101 @@ function renderChat() {
   }).join('') : '<div class="empty">Tidak ada percakapan yang cocok.</div>';
 }
 
-const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-let clockT = null;
-function tickClock() {
-  const el = $('#clk'); if (!el || tab !== 'home') { clearInterval(clockT); clockT = null; return; }
-  const d = new Date(), p2 = n => String(n).padStart(2, '0'), off = -d.getTimezoneOffset() / 60, zone = { 7: 'WIB', 8: 'WITA', 9: 'WIT' }[off] || 'GMT' + (off >= 0 ? '+' : '') + off;
-  $('#ck-t').textContent = `${p2(d.getHours())}:${p2(d.getMinutes())} ${zone}`;
-  $('#ck-h').textContent = HARI[d.getDay()]; $('#ck-d').textContent = `${d.getDate()} ${BLN[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
+// ---------- Kehadiran hari ini (check-in GPS) ----------
+const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.875116155353869, lng: 109.67663296836024, r: 100 };
+const wibHM = ts => new Date(ts + 7 * 36e5).toISOString().slice(11, 16);
+const gDist = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742000 * Math.asin(Math.min(1, Math.sqrt(h))); };
+const hq = x => hc.querySelector(x);
+function loadLeaflet(cb) {
+  if (window.L) return cb(true);
+  if (hcL) return hcL.push(cb); hcL = [cb];
+  const done = ok => { const l = hcL; hcL = null; l.forEach(f => f(ok)); };
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'; document.head.appendChild(css);
+  const js = document.createElement('script'); js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'; js.onload = () => done(!!window.L); js.onerror = () => done(false); document.head.appendChild(js);
+}
+function startGeo(force) {
+  if (geoW != null && !force) return;
+  if (geoW != null) { navigator.geolocation.clearWatch(geoW); geoW = null; }
+  if (!navigator.geolocation) { geo.st = 'nogeo'; return updHc(); }
+  if (window.isSecureContext === false) { geo.st = 'insecure'; return updHc(); }
+  geo.st = 'wait'; updHc();
+  geoW = navigator.geolocation.watchPosition(p => { geo = { st: 'ok', lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }; updHc(); },
+    e => { if (e.code === 1) { geo.st = 'denied'; navigator.geolocation.clearWatch(geoW); geoW = null; } else geo.st = 'err'; updHc(); },
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+}
+function stopGeo() { if (geoW != null) { navigator.geolocation.clearWatch(geoW); geoW = null; } clearInterval(hcT); hcT = null; }
+const geoInside = () => geo.st === 'ok' && geo.acc <= 150 && gDist(geo.lat, geo.lng, office.lat, office.lng) <= office.r;
+function addAttRow(r) {
+  if (!att || !att.has) att = { has: true, file: 'Check-in aplikasi', total: 0, people: 1, from: r.d, to: r.d, updatedAt: Date.now(), by: 'Check-in GPS', rows: [] };
+  if (att.rows.some(x => x.d === r.d)) return;
+  att.rows.push(r); att.rows.sort((a, b) => (a.d < b.d ? 1 : -1)); att.total = att.rows.length;
+  if (r.d < att.from) att.from = r.d; if (r.d > att.to) att.to = r.d;
+}
+function buildCard() {
+  hc = document.createElement('div'); hc.className = 'hcard';
+  hc.innerHTML = `<div class="hh"><span>Kehadiran Hari Ini</span><time class="hd"></time></div>
+    <div class="hb"><div class="hl2"><div class="ht"><b class="htm">--:--</b><em class="hz"></em></div><span class="hbd no"></span><p class="hi"></p></div>
+    <div class="hmap"><div class="hm"></div><button type="button" class="hpill wait"></button><span class="hattr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></span></div></div>
+    <p class="hmsg" hidden></p><button type="button" class="hgo"></button>`;
+  hq('.hpill').onclick = () => { if (['denied', 'err', 'nogeo', 'insecure'].includes(geo.st)) startGeo(true); };
+  hq('.hgo').onclick = () => {
+    if (ci || hcBusy || !geoInside()) return;
+    hcBusy = true; hcMsg = ''; updHc();
+    send({ type: 'checkin', lat: geo.lat, lng: geo.lng, acc: geo.acc }).then(r => { if (!r) { hcBusy = false; hcMsg = 'Gagal terhubung ke server. Coba lagi.'; updHc(); } });
+  };
+}
+function initMap() {
+  if (hcMap || !hc.isConnected || !hq('.hm').offsetWidth) return;
+  loadLeaflet(ok => {
+    if (!ok || hcMap || !hc.isConnected) return;
+    const m = hcMap = L.map(hq('.hm'), { zoomControl: false, attributionControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, tap: false }).setView([office.lat, office.lng], 17);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m);
+    hcMap._area = L.circle([office.lat, office.lng], { radius: office.r, color: '#0D429D', weight: 1.5, fillColor: '#3B6FD0', fillOpacity: .15 }).addTo(m);
+    L.marker([office.lat, office.lng], { icon: L.divIcon({ className: '', html: '<div class="mpin"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: false }).addTo(m);
+    hcMap._me = L.circleMarker([0, 0], { radius: 6, color: '#fff', weight: 2.5, fillColor: '#2563eb', fillOpacity: 1, opacity: 0 }).addTo(m);
+    updMap();
+  });
+}
+function updMap() {
+  if (!hcMap) return;
+  const key = geo.st + geo.lat.toFixed(5) + geo.lng.toFixed(5) + hq('.hm').offsetWidth; if (hcMap._key === key) return; hcMap._key = key; hcMap.invalidateSize();
+  const b = hcMap._area.getBounds();
+  if (geo.st === 'ok') { hcMap._me.setLatLng([geo.lat, geo.lng]).setStyle({ opacity: 1, fillOpacity: 1 }); hcMap.fitBounds(b.extend([geo.lat, geo.lng]), { padding: [16, 16], maxZoom: 18, animate: false }); }
+  else { hcMap._me.setStyle({ opacity: 0, fillOpacity: 0 }); hcMap.fitBounds(b, { padding: [10, 10], maxZoom: 18, animate: false }); }
+}
+function updHc() {
+  if (!hc) return;
+  const d = new Date(), p2 = n => String(n).padStart(2, '0'), off = -d.getTimezoneOffset() / 60, inside = geoInside();
+  hq('.htm').textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}`; hq('.hz').textContent = { 7: 'WIB', 8: 'WITA', 9: 'WIT' }[off] || 'GMT' + (off >= 0 ? '+' : '') + off;
+  hq('.hd').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`;
+  const dist = geo.st === 'ok' ? Math.round(gDist(geo.lat, geo.lng, office.lat, office.lng)) : 0, pill = hq('.hpill'), bd = hq('.hbd'), go = hq('.hgo'), msg = hq('.hmsg');
+  const P = { wait: ['wait', 'Mencari lokasi…'], denied: ['bad', 'Izin lokasi ditolak'], err: ['bad', 'Lokasi tidak tersedia'], nogeo: ['bad', 'GPS tidak didukung'], insecure: ['bad', 'Perlu koneksi HTTPS'], idle: ['wait', 'Mencari lokasi…'] }[geo.st] || (geo.acc > 150 ? ['warn', 'Sinyal GPS lemah'] : inside ? ['ok', 'Lokasi Valid'] : ['warn', `Di luar area · ${dist >= 1000 ? (dist / 1000).toFixed(1) + ' km' : dist + ' m'}`]);
+  pill.className = 'hpill ' + P[0]; pill.textContent = P[1];
+  const late = ci && ci.row.k === 'telat';
+  bd.className = 'hbd ' + (ci ? (late ? 'late' : 'ok') : 'no'); bd.innerHTML = ci ? (late ? 'Terlambat' : `Hadir ${ic('check', 13)}`) : 'Belum Check-in';
+  hq('.hi').innerHTML = ci ? `${ic('clock', 14)}Check in ${wibHM(ci.ts)} WIB` : inside ? `${ic('clock', 14)}Kamu berada di area kantor` : geo.st === 'denied' ? 'Aktifkan izin lokasi di browser, lalu ketuk label di peta.' : `${ic('clock', 14)}Belum check in hari ini`;
+  go.disabled = !!ci || hcBusy || !inside;
+  go.innerHTML = ci ? `${ic('check', 18)}Sudah Check In` : hcBusy ? 'Memproses…' : `${ic('clock', 18)}Check In`;
+  msg.hidden = !hcMsg; msg.textContent = hcMsg;
+  if (!ci && !hcBusy && !inside && geo.st === 'ok' && geo.acc <= 150 && !hcMsg) { msg.hidden = false; msg.textContent = `Check In aktif saat kamu berada dalam ${office.r} m dari lokasi kantor.`; }
+  updMap();
+}
+function mountCard() {
+  if (!hc) buildCard();
+  const slot = $('#hcslot'); slot.replaceWith(hc);
+  startGeo(); clearInterval(hcT); hcT = setInterval(() => { if (!hc.isConnected) return stopGeo(); updHc(); }, 1000);
+  updHc(); initMap(); if (hcMap) updMap();
 }
 function renderHome() {
   const u = users.get(me), on = [...users.values()].filter(x => x.online).length, n = totalUnread();
-  $('#main').innerHTML = `<div class="hero hr"><div class="hl"><p>Selamat datang kembali</p><h2>${esc(u.name.split(' ')[0])}</h2><p>${esc(u.title)}</p></div>
-    <div class="hc" id="clk"><b id="ck-t">--:--</b><span id="ck-h"></span><span id="ck-d"></span></div></div>
+  $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} 👋</h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
+    <div id="hcslot"></div>
     <div class="tiles"><button class="card" data-go="chat" style="text-align:left"><b>${n}</b><span>Pesan belum dibaca</span></button><div class="card"><b>${on}</b><span>Rekan online</span></div></div>
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
     <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
-  tickClock(); clearInterval(clockT); clockT = setInterval(tickClock, 5000);
+  mountCard();
   const saved = filter; filter = 'all'; q = '';
   const items = convIds().filter(c => last(c)).sort((a, b) => last(b).time - last(a).time).slice(0, 3);
   $('#hthreads').innerHTML = items.length ? items.map(c => { const m = meta(c), l = last(c); return `<button class="th ${unread(c) ? 'u' : ''}" data-c="${esc(c)}">${m.av}<div class="bd"><div class="r1"><span class="nm">${esc(m.name)}</span><time>${shortT(l.time)}</time></div><p>${esc(l.text)}</p></div></button>`; }).join('') : '<div class="empty">Belum ada obrolan.</div>';
