@@ -42,15 +42,11 @@ async function snapshot(uid, session) {
   for (const r of pe.rows) (peer[r.conv] = peer[r.conv] || {})[r.uid] = Number(r.last_id);
   const users = Object.values(db.users).map(x => ({ id: x.id, name: x.name, title: x.title, online: (seen[x.id] || 0) > t - 15000, lastSeen: seen[x.id] || 0 }));
   const maxId = m.rows.reduce((a, r) => Math.max(a, Number(r.id)), 0);
-  let att = am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false };
-  const have = new Set((att.rows || []).map(r => r.d)), extra = ck.rows.filter(r => !have.has(r.d)).map(r => L.checkinRow(Number(r.ts))); // data Excel diutamakan; check-in melengkapi hari yang belum ada
-  if (extra.length) {
-    const days = [...(att.rows || []), ...extra].map(r => r.d).sort(), all = [...(att.rows || []), ...extra].sort((a, b) => (a.d < b.d ? 1 : -1));
-    att = att.has ? { ...att, rows: all, total: all.length, from: days[0] < att.from ? days[0] : att.from, to: days[days.length - 1] > att.to ? days[days.length - 1] : att.to }
-      : { has: true, file: 'Check-in aplikasi', total: all.length, people: 1, from: days[0], to: days[days.length - 1], updatedAt: Number(ck.rows[0].ts), by: 'Check-in GPS', rows: all };
-  }
+  const att = am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false };
+  const crow = ck.rows.map(r => L.checkinRow(Number(r.ts))), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
+  const chk = crow.length ? { has: true, file: 'Check-in GPS', total: crow.length, people: 1, from: cd[0], to: cd[cd.length - 1], updatedAt: Math.max(...ck.rows.map(r => Number(r.ts))), by: 'Check-in GPS', rows: crow } : { has: false };
   const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
-  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), row: L.checkinRow(Number(tc.ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), row: L.checkinRow(Number(tc.ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
