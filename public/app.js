@@ -7,7 +7,7 @@ const ls = { get: k => { try { return localStorage.getItem(k); } catch { return 
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let att = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'chat', filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -86,7 +86,7 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
@@ -213,11 +213,13 @@ function startGeo(force) {
 }
 function stopGeo() { if (geoW != null) { navigator.geolocation.clearWatch(geoW); geoW = null; } clearInterval(hcT); hcT = null; }
 const geoInside = () => geo.st === 'ok' && geo.acc <= 150 && gDist(geo.lat, geo.lng, office.lat, office.lng) <= office.r;
-function addAttRow(r) {
-  if (!att || !att.has) att = { has: true, file: 'Check-in aplikasi', total: 0, people: 1, from: r.d, to: r.d, updatedAt: Date.now(), by: 'Check-in GPS', rows: [] };
-  if (att.rows.some(x => x.d === r.d)) return;
-  att.rows.push(r); att.rows.sort((a, b) => (a.d < b.d ? 1 : -1)); att.total = att.rows.length;
-  if (r.d < att.from) att.from = r.d; if (r.d > att.to) att.to = r.d;
+function addAttRow(r) { // check-in baru -> data check-in (terpisah dari data unggahan admin)
+  if (!attC) attC = { has: true, file: 'Check-in GPS', total: 0, people: 1, from: r.d, to: r.d, updatedAt: Date.now(), by: 'Check-in GPS', rows: [] };
+  if (!attC.rows.some(x => x.d === r.d)) {
+    attC.rows.push(r); attC.rows.sort((a, b) => (a.d < b.d ? 1 : -1)); attC.total = attC.rows.length; attC.updatedAt = Date.now();
+    if (r.d < attC.from) attC.from = r.d; if (r.d > attC.to) attC.to = r.d;
+  }
+  useAtt();
 }
 function buildCard() {
   hc = document.createElement('div'); hc.className = 'hcard';
@@ -444,10 +446,17 @@ const jam = a => {
   if (!m) return esc(a);
   return `${m[1].padStart(2, '0')}:${m[2]} – ${m[3] ? m[3].padStart(2, '0') + ':' + m[4] : '?'}`;
 };
-function setAtt(a) { // data baru (mis. admin mengunggah ulang) -> filter tanggal dikembalikan ke semua
-  const prev = att && att.updatedAt; att = a || null;
-  if (!att || att.updatedAt !== prev) { attFrom = attTo = null; attMonth = 'all'; }
+function setAtt(a) { // data unggahan admin baru -> filter tanggal dikembalikan ke semua
+  const prev = attU && attU.updatedAt; attU = a && a.has ? a : null;
+  if (!attU || attU.updatedAt !== prev) { attFrom = attTo = null; attMonth = 'all'; }
+  useAtt();
 }
+function useAtt(reset) { // sumber yang tampil di menu Absensi: 'upload' (Excel admin) atau 'chk' (check-in GPS)
+  if (!attSrc) attSrc = attU ? 'upload' : 'chk';
+  att = attSrc === 'chk' ? attC : attU;
+  if (reset) { attFrom = attTo = null; attMonth = 'all'; attKind = 'telat'; }
+}
+const attSeg = () => `<div class="nseg" style="margin-bottom:12px"><button data-as="chk" class="${attSrc === 'chk' ? 'on' : ''}">Check-in${attC ? ` (${attC.rows.length})` : ''}</button><button data-as="upload" class="${attSrc === 'upload' ? 'on' : ''}">Data Admin${attU ? ` (${attU.rows.length})` : ''}</button></div>`;
 const effFrom = () => attFrom || (att && att.from), effTo = () => attTo || (att && att.to);
 const attRows = () => ((att && att.rows) || []).filter(r => r.d >= effFrom() && r.d <= effTo());
 const periodLabel = () => effFrom() === effTo() ? fmtLong(effFrom()) : `${fmtLong(effFrom())} – ${fmtLong(effTo())}`;
@@ -470,12 +479,13 @@ document.addEventListener('change', e => {
 });
 const attGroup = () => { const by = {}; attRows().forEach(r => (by[r.k] = by[r.k] || []).push(r)); return by; };
 function renderAtt() {
-  const a = att;
-  if (!a || !a.has) { $('#main').innerHTML = '<div class="sec" style="margin:0 0 10px"><h3 class="h">Rekap Absensi</h3></div><div class="empty">Data absensi belum tersedia. Admin belum mengunggah data absensi.</div>'; return; }
-  const foot = `<div class="ver" style="text-align:left;font-weight:400;margin:4px 0 14px">Data diperbarui ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}</div>`;
-  if (!a.rows.length) { $('#main').innerHTML = '<div class="sec" style="margin:0 0 10px"><h3 class="h">Rekap Absensi</h3></div><div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
-  if (!$('#attres')) {
-    $('#main').innerHTML = `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3><small id="attper" style="color:var(--ink2)"></small></div></div>
+  useAtt(); const a = att, head = '<div class="sec" style="margin:0 0 10px"><h3 class="h">Rekap Absensi</h3></div>' + attSeg();
+  if (!a || !a.has) { $('#main').innerHTML = head + `<div class="empty">${attSrc === 'chk' ? 'Belum ada check-in. Lakukan Check In dari Beranda saat berada di lokasi kantor.' : 'Data absensi belum tersedia. Admin belum mengunggah data absensi.'}</div>`; return; }
+  const foot = `<div class="ver" style="text-align:left;font-weight:400;margin:4px 0 14px">${attSrc === 'chk' ? 'Berdasarkan check-in GPS di aplikasi' : `Data diperbarui ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}`}</div>`;
+  if (!a.rows.length) { $('#main').innerHTML = head + '<div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
+  if (!$('#attres') || !$('#main').querySelector('[data-as].on') || $('#main').dataset.as !== attSrc) {
+    $('#main').dataset.as = attSrc;
+    $('#main').innerHTML = attSeg() + `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3><small id="attper" style="color:var(--ink2)"></small></div></div>
       <div class="card" style="padding:14px 16px"><div class="fl">Pilih bulan</div><div class="chips" id="amchips" style="margin:6px -16px 12px;padding:2px 16px"></div>
       <div class="drow"><label class="fld" style="margin:0"><span>Dari tanggal</span><input id="adf" type="date"></label><label class="fld" style="margin:0"><span>Sampai tanggal</span><input id="adt" type="date"></label></div>
       <button class="btn sec2" id="adreset" style="margin-top:12px;height:40px" hidden>Tampilkan semua tanggal</button></div><div id="attres"></div>`;
@@ -513,7 +523,7 @@ function paintDetail() {
   $('#dback').onclick = () => { el.hidden = true; el.innerHTML = ''; };
 }
 function attInfo() {
-  const a = att && att.has ? att : null;
+  const a = attU && attU.has ? attU : null;
   return a ? `Data saat ini: <b>${esc(a.file)}</b> · ${a.total} catatan untuk ${a.people} karyawan · ${fmtLong(a.from)} – ${fmtLong(a.to)} · diunggah ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}` : 'Belum ada data absensi.';
 }
 function attSheet() {
@@ -585,8 +595,9 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
   if (!t) return;
+  if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
   if (t.dataset.nc) { newsCat = t.dataset.nc; renderNews(true); return; }
   if (t.dataset.tab) { tab = t.dataset.tab; render(); $('#main').scrollTop = 0; }
