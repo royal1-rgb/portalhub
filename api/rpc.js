@@ -25,7 +25,7 @@ async function snapshot(uid, session) {
   const db = await getDb(true), u = db.users[uid], t = now();
   if (!u) return { type: 'auth_error', resume: true };
   await touch(uid, t);
-  const [m, rd, pe, pr, v, am, ar] = await Promise.all([
+  const [m, rd, pe, pr, v, am, ar, ck] = await Promise.all([
 
     q(`SELECT id, conv, frm, body, ts FROM (SELECT *, row_number() OVER (PARTITION BY conv ORDER BY id DESC) rn FROM messages WHERE ${ME}) x WHERE rn <= 200 ORDER BY id`, [uid]),
     q('SELECT conv, last_id FROM reads WHERE uid = $1', [uid]),
@@ -34,6 +34,7 @@ async function snapshot(uid, session) {
     q("SELECT COALESCE((SELECT (v #>> '{}')::int FROM kv WHERE k = 'ver'), 0) AS n"),
     q("SELECT v FROM kv WHERE k = 'att_meta'"),
     q('SELECT d, aktual, status, kind, mins FROM attendance WHERE uid = $1 ORDER BY d DESC', [uid]),
+    q('SELECT d, ts FROM checkins WHERE uid = $1 ORDER BY d DESC', [uid]),
   ]);
   const seen = Object.fromEntries(pr.rows.map(r => [r.uid, Number(r.ts)])), msgs = { all: [] }, peer = {}, reads = {};
   for (const r of m.rows) (msgs[r.conv] = msgs[r.conv] || []).push(msgOut(r));
@@ -41,7 +42,15 @@ async function snapshot(uid, session) {
   for (const r of pe.rows) (peer[r.conv] = peer[r.conv] || {})[r.uid] = Number(r.last_id);
   const users = Object.values(db.users).map(x => ({ id: x.id, name: x.name, title: x.title, online: (seen[x.id] || 0) > t - 15000, lastSeen: seen[x.id] || 0 }));
   const maxId = m.rows.reduce((a, r) => Math.max(a, Number(r.id)), 0);
-  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att: am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false }, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  let att = am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false };
+  const have = new Set((att.rows || []).map(r => r.d)), extra = ck.rows.filter(r => !have.has(r.d)).map(r => L.checkinRow(Number(r.ts))); // data Excel diutamakan; check-in melengkapi hari yang belum ada
+  if (extra.length) {
+    const days = [...(att.rows || []), ...extra].map(r => r.d).sort(), all = [...(att.rows || []), ...extra].sort((a, b) => (a.d < b.d ? 1 : -1));
+    att = att.has ? { ...att, rows: all, total: all.length, from: days[0] < att.from ? days[0] : att.from, to: days[days.length - 1] > att.to ? days[days.length - 1] : att.to }
+      : { has: true, file: 'Check-in aplikasi', total: all.length, people: 1, from: days[0], to: days[days.length - 1], updatedAt: Number(ck.rows[0].ts), by: 'Check-in GPS', rows: all };
+  }
+  const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
+  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), row: L.checkinRow(Number(tc.ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -91,6 +100,16 @@ async function route(d, ip) {
       await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await bumpVer(); return { type: 'bye' };
+    case 'checkin': {
+      const lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
+      if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { type: 'checkin_err', msg: 'Lokasi tidak valid.' };
+      if (isFinite(acc) && acc > 150) return { type: 'checkin_err', msg: `Akurasi GPS rendah (±${Math.round(acc)} m). Pindah ke area terbuka lalu coba lagi.` };
+      const dist = L.distM(lat, lng, O.lat, O.lng);
+      if (dist > O.r) return { type: 'checkin_err', msg: `Kamu berada ${Math.round(dist)} m dari lokasi kantor (maksimal ${O.r} m).` };
+      const day = L.wib(t).d, ins = await q('INSERT INTO checkins (uid, d, ts, lat, lng, acc) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING RETURNING ts', [uid, day, t, lat, lng, isFinite(acc) ? acc : null]);
+      const ts = ins.rows[0] ? t : Number((await q('SELECT ts FROM checkins WHERE uid = $1 AND d = $2', [uid, day])).rows[0].ts);
+      return { type: 'checkin_ok', ci: { d: day, ts, row: L.checkinRow(ts) }, already: !ins.rows[0] };
+    }
     case 'send': {
       const text = L.clean(d.text, 2000), conv = String(d.conv || '');
       if (!text || !memberOf(await getDb(), conv, uid)) return { type: 'noop' };
@@ -128,7 +147,7 @@ async function route(d, ip) {
           delete db.users[tg.id]; (db.deleted = db.deleted || {})[tg.id] = 1; // penanda agar tidak dibuat ulang dari employees.json
           if (db.cuti) { if (db.cuti.rows) delete db.cuti.rows[tg.id]; if (db.cuti.quotas) delete db.cuti.quotas[tg.id]; }
           await q('DELETE FROM sessions WHERE uid = $1', [tg.id]); await q('DELETE FROM presence WHERE uid = $1', [tg.id]);
-          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]);
+          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]); await q('DELETE FROM checkins WHERE uid = $1', [tg.id]);
           await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [tg.id]);
           return { type: 'emp_del', id: tg.id, name: tg.name, changed: 1 };
         }
