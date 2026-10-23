@@ -295,7 +295,7 @@ function renderHome() {
   const u = users.get(me);
   $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
     <div id="hcslot"></div>
-    <div> </div>
+    
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
     <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
