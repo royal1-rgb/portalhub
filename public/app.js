@@ -364,7 +364,7 @@ function showLogin() {
     <div id="pick"><div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="rq" type="search" placeholder="Cari nama..." autocomplete="off"></div><div class="rl" id="rl"></div></div>
     <div id="chosen" hidden></div>
     <label class="fld" id="pinf" hidden><span>PIN (6 angka)</span><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
-    <div class="err" id="lerr" role="alert"></div><button class="btn" id="go" type="submit" hidden>Masuk ke Obrolan</button></form>`;
+    <div class="err" id="lerr" role="alert"></div><button class="btn" id="go" type="submit" hidden>Login</button></form>`;
   const paint = () => {
     const t = $('#rq').value.trim().toLowerCase(), list = roster.filter(r => !t || (r.name + ' ' + r.title).toLowerCase().includes(t));
     $('#rl').innerHTML = list.length ? list.map(r => `<button type="button" class="li" data-r="${r.id}">${av(r, 's')}<div><b>${esc(r.name)}</b><small>${esc(r.title)}</small></div></button>`).join('') : '<div class="empty">Nama tidak ditemukan.</div>';
