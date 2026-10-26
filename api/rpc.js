@@ -3,6 +3,11 @@ const crypto = require('crypto');
 const { q, ready, getDb, mutate, tx, bumpVer } = require('../lib/db');
 const L = require('../lib/logic');
 
+// Check in/out hanya dari perangkat yang disetujui admin (cegah login + absen lewat ponsel orang lain).
+// Matikan dengan variabel lingkungan DEVICE_BINDING=0.
+const BIND = process.env.DEVICE_BINDING !== '0';
+
+
 const now = () => Date.now();
 const json = (res, code, obj) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.setHeader('Cache-Control', 'no-store'); res.end(JSON.stringify(obj)); };
 const msgOut = r => ({ id: Number(r.id), conv: r.conv, from: r.frm, text: r.body, time: Number(r.ts) });
@@ -21,10 +26,25 @@ async function authed(session) {
   return r.rows[0] ? { uid: r.rows[0].uid, hash: h } : null;
 }
 
-async function snapshot(uid, session) {
+// Perangkat didaftarkan otomatis (disetujui) HANYA jika berasal dari sesi yang sudah ada dan akun belum punya perangkat disetujui.
+// Login dengan PIN dari perangkat baru selalu menunggu persetujuan admin.
+async function ensureDevice(uid, ctx, viaPin) {
+  const t = now(), r = await q('SELECT status FROM devices WHERE uid = $1 AND dh = $2', [uid, ctx.dh]);
+  if (r.rows[0]) { await q('UPDATE devices SET seen = $3 WHERE uid = $1 AND dh = $2', [uid, ctx.dh, t]); return r.rows[0].status; }
+  const has = (await q("SELECT 1 FROM devices WHERE uid = $1 AND status = 'approved' LIMIT 1", [uid])).rows.length > 0;
+  const status = !has && !viaPin ? 'approved' : 'pending';
+  const ins = await q('INSERT INTO devices (uid, dh, label, status, created, seen) VALUES ($1, $2, $3, $4, $5, $5) ON CONFLICT DO NOTHING RETURNING 1', [uid, ctx.dh, L.deviceLabel(ctx.ua), status, t]);
+  if (ins.rows[0]) await bumpVer(); // admin melihat permintaan baru; pengguna melihat statusnya
+  return status;
+}
+
+async function snapshot(uid, session, ctx, viaPin) {
   const db = await getDb(true), u = db.users[uid], t = now();
   if (!u) return { type: 'auth_error', resume: true };
   await touch(uid, t);
+  const devStatus = BIND && ctx ? await ensureDevice(uid, ctx, !!viaPin) : 'approved';
+  const dev = { status: devStatus, label: ctx ? L.deviceLabel(ctx.ua) : '', on: BIND };
+  const devPending = u.admin && BIND ? Number((await q("SELECT count(*) AS n FROM devices WHERE status = 'pending'")).rows[0].n) : 0;
   const [m, rd, pe, pr, v, am, ar, ck] = await Promise.all([
 
     q(`SELECT id, conv, frm, body, ts FROM (SELECT *, row_number() OVER (PARTITION BY conv ORDER BY id DESC) rn FROM messages WHERE ${ME}) x WHERE rn <= 200 ORDER BY id`, [uid]),
@@ -46,7 +66,7 @@ async function snapshot(uid, session) {
   const crow = ck.rows.map(r => L.checkinRow(Number(r.ts), r.out_ts && Number(r.out_ts))), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
   const chk = crow.length ? { has: true, file: 'Check-in GPS', total: crow.length, people: 1, from: cd[0], to: cd[cd.length - 1], updatedAt: Math.max(...ck.rows.map(r => Number(r.ts))), by: 'Check-in GPS', rows: crow } : { has: false };
   const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
-  return { type: 'init', me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -61,7 +81,7 @@ async function poll(uid, d) {
   return { type: 'poll', msgs: m.rows.map(msgOut), reads: r.rows.map(x => ({ uid: x.uid, conv: x.conv, last_id: Number(x.last_id) })), rnow: t - 3000, online: p.rows.map(x => x.uid), ver: v.rows[0].n };
 }
 
-async function login(d, ip) {
+async function login(d, ip, ctx) {
   const db = await getDb(true), u = db.users[d.id];
   if (!u) return { type: 'auth_error', msg: 'Nama tidak ditemukan.' };
   const t = now(), ku = 'u:' + u.id, ki = 'i:' + ip;
@@ -79,27 +99,47 @@ async function login(d, ip) {
   const s = crypto.randomBytes(24).toString('hex');
   await q('INSERT INTO sessions (hash, uid, ts) VALUES ($1, $2, $3)', [L.sha(s), u.id, t]);
   await q('DELETE FROM sessions WHERE uid = $1 AND hash NOT IN (SELECT hash FROM sessions WHERE uid = $1 ORDER BY ts DESC LIMIT 5)', [u.id]);
-  return snapshot(u.id, s);
+  return snapshot(u.id, s, ctx, true);
 }
 
-async function route(d, ip) {
+async function route(d, ip, ctx) {
   if (d.a === 'roster') return { type: 'roster', list: L.roster(await getDb()) };
-  if (d.a === 'login') return login(d, ip);
+  if (d.a === 'login') return login(d, ip, ctx);
   const au = await authed(d.session);
   if (!au) return { type: 'auth_error', resume: true };
   const { uid, hash } = au, t = now();
   switch (d.a) {
-    case 'resume': case 'snapshot': return snapshot(uid, d.session);
+    case 'resume': case 'snapshot': return snapshot(uid, d.session, ctx, false);
     case 'poll': return poll(uid, d);
     case 'logout': // riwayat obrolan tidak disimpan: hapus pesan yang dikirim user ini dan semua obrolan pribadinya
       await q('DELETE FROM sessions WHERE hash = $1', [hash]);
       await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await bumpVer(); return { type: 'bye' };
+    case 'devlist': case 'devapprove': case 'devrevoke': case 'devapproveall': {
+      const db = await getDb(true);
+      if (!(db.users[uid] || {}).admin) return { type: 'noop' };
+      let msg = null;
+      if (d.a === 'devapprove') { // satu akun = satu perangkat: yang disetujui menggantikan yang lama
+        await tx(async c => {
+          await c.query("DELETE FROM devices WHERE uid = $1 AND status = 'approved' AND dh <> $2", [d.uid, d.dh]);
+          await c.query("UPDATE devices SET status = 'approved' WHERE uid = $1 AND dh = $2", [d.uid, d.dh]);
+        });
+      } else if (d.a === 'devrevoke') await q('DELETE FROM devices WHERE uid = $1 AND dh = $2', [d.uid, d.dh]);
+      else if (d.a === 'devapproveall') {
+        const r = await q("UPDATE devices x SET status = 'approved' FROM (SELECT DISTINCT ON (uid) uid, dh FROM devices WHERE status = 'pending' AND uid NOT IN (SELECT uid FROM devices WHERE status = 'approved') ORDER BY uid, created) p WHERE x.uid = p.uid AND x.dh = p.dh RETURNING 1");
+        msg = `${r.rowCount} perangkat disetujui.`;
+      }
+      if (d.a !== 'devlist') await bumpVer();
+      const rows = (await q("SELECT uid, dh, label, status, created, seen FROM devices ORDER BY (status = 'pending') DESC, created DESC")).rows;
+      const shared = {}; rows.filter(r => r.status === 'approved').forEach(r => (shared[r.dh] = (shared[r.dh] || 0) + 1));
+      return { type: 'devlist', msg, list: rows.map(r => ({ uid: r.uid, dh: r.dh, name: (db.users[r.uid] || {}).name || '?', title: (db.users[r.uid] || {}).title || '', label: r.label, status: r.status, created: Number(r.created), seen: Number(r.seen), shared: r.status === 'approved' && shared[r.dh] > 1 })) };
+    }
     case 'checkin': case 'checkout': {
       const out = d.a === 'checkout', E = msg => ({ type: out ? 'checkout_err' : 'checkin_err', msg }), lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
       if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return E('Lokasi tidak valid.');
       if (isFinite(acc) && acc > 150) return E(`Akurasi GPS rendah (±${Math.round(acc)} m). Pindah ke area terbuka lalu coba lagi.`);
+      if (BIND && (await ensureDevice(uid, ctx, false)) !== 'approved') return E('Perangkat ini belum terdaftar untuk akunmu, jadi check in/out tidak bisa dilakukan dari sini. Permintaan persetujuan sudah dikirim ke admin. Gunakan ponselmu sendiri yang sudah terdaftar.');
       const dist = L.distM(lat, lng, O.lat, O.lng);
       if (dist > O.r) return E(`Kamu berada ${Math.round(dist)} m dari lokasi kantor (maksimal ${O.r} m).`);
       if (out) {
@@ -108,10 +148,10 @@ async function route(d, ip) {
         const ts = Number(cur.ts);
         if (cur.out_ts) return { type: 'checkout_ok', ci: { d: w.d, ts, out: Number(cur.out_ts), row: L.checkinRow(ts, Number(cur.out_ts)) }, already: true };
         if (w.hm < '16:00' && !d.confirm) return { type: 'checkout_confirm', hm: w.hm }; // belum jam pulang kerja: minta persetujuan user
-        await q('UPDATE checkins SET out_ts = $3, out_lat = $4, out_lng = $5 WHERE uid = $1 AND d = $2 AND out_ts IS NULL', [uid, w.d, t, lat, lng]);
+        await q('UPDATE checkins SET out_ts = $3, out_lat = $4, out_lng = $5, out_dev = $6 WHERE uid = $1 AND d = $2 AND out_ts IS NULL', [uid, w.d, t, lat, lng, ctx.dh.slice(0, 12)]);
         return { type: 'checkout_ok', ci: { d: w.d, ts, out: t, row: L.checkinRow(ts, t) } };
       }
-      const day = L.wib(t).d, ins = await q('INSERT INTO checkins (uid, d, ts, lat, lng, acc) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING RETURNING ts', [uid, day, t, lat, lng, isFinite(acc) ? acc : null]);
+      const day = L.wib(t).d, ins = await q('INSERT INTO checkins (uid, d, ts, lat, lng, acc, dev) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING RETURNING ts', [uid, day, t, lat, lng, isFinite(acc) ? acc : null, ctx.dh.slice(0, 12)]);
       const ts = ins.rows[0] ? t : Number((await q('SELECT ts FROM checkins WHERE uid = $1 AND d = $2', [uid, day])).rows[0].ts);
       return { type: 'checkin_ok', ci: { d: day, ts, out: null, row: L.checkinRow(ts) }, already: !ins.rows[0] };
     }
@@ -218,6 +258,9 @@ module.exports = async (req, res) => {
     const raw = await readBody(req);
     if (String(req.headers['content-type'] || '').includes('octet-stream')) return await upload(req, res, raw);
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'x').split(',')[0].trim();
-    json(res, 200, await route(JSON.parse(raw.toString() || '{}'), ip));
+    // Cookie perangkat (HttpOnly, diatur server): penanda ponsel yang tidak bisa dipindahkan ke ponsel lain lewat akun
+    const m = String(req.headers.cookie || '').match(/(?:^|;\s*)hd=([a-f0-9]{32})/); let tok = m && m[1];
+    if (!tok) { tok = crypto.randomBytes(16).toString('hex'); res.setHeader('Set-Cookie', `hd=${tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age=63072000${String(req.headers['x-forwarded-proto'] || '').includes('https') ? '; Secure' : ''}`); }
+    json(res, 200, await route(JSON.parse(raw.toString() || '{}'), ip, { dh: L.sha('dev:' + tok), ua: String(req.headers['user-agent'] || '') }));
   } catch (e) { console.error(e); json(res, 500, { type: 'error', msg: 'Terjadi kesalahan di server.' }); }
 };
