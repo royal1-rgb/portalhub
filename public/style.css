@@ -170,4 +170,5 @@ main.nw .nseg{margin:0}
 .mdb h3{margin:0 0 6px;font:700 18px/26px var(--ff)}.mdb p{margin:0 0 8px;color:var(--ink2);font-size:13px;line-height:20px}.mdb p.mq{color:var(--ink);font-weight:600}
 .mda{display:flex;gap:10px;margin-top:14px}.mda .btn{flex:1;margin:0}
 @keyframes mdf{from{opacity:0}to{opacity:1}}
+
 .hcard{margin-bottom:12px}
