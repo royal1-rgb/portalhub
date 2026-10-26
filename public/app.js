@@ -7,7 +7,7 @@ const ls = { get: k => { try { return localStorage.getItem(k); } catch { return 
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'home', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'home', filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -88,7 +88,7 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
@@ -192,7 +192,7 @@ function renderChat() {
 
 // ---------- Kehadiran hari ini (check-in GPS) ----------
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.875093833269339, lng: 109.67658363201345, r: 30 };
+let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.875116155353869, lng: 109.67663296836024, r: 50 };
 const wibHM = ts => new Date(ts + 7 * 36e5).toISOString().slice(11, 16);
 const gDist = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742000 * Math.asin(Math.min(1, Math.sqrt(h))); };
 const hq = x => hc.querySelector(x);
@@ -294,8 +294,8 @@ function mountCard() {
 function renderHome() {
   const u = users.get(me);
   $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
+    ${devBanner()}
     <div id="hcslot"></div>
-    
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
     <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
@@ -308,7 +308,7 @@ function renderHome() {
 
 function renderMe() {
   const u = users.get(me);
-  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${admin ? `<button class="card li" id="emp" style="width:100%;padding:16px 20px"><span class="ic">${ic('group', 20)}</span><div><b>Kelola Karyawan</b><small>Tambah karyawan agar bisa login · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="cutiAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('file', 20)}</span><div><b>Data Cuti</b><small>Unggah ulang berkas Excel cuti · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="attAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('clock', 20)}</span><div><b>Data Absensi</b><small>Unggah ulang berkas Excel absensi · Admin</small></div>${ic('chev', 20)}</button>` : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
+  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${admin ? `<button class="card li" id="emp" style="width:100%;padding:16px 20px"><span class="ic">${ic('group', 20)}</span><div><b>Kelola Karyawan</b><small>Tambah karyawan agar bisa login · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="cutiAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('file', 20)}</span><div><b>Data Cuti</b><small>Unggah ulang berkas Excel cuti · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="attAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('clock', 20)}</span><div><b>Data Absensi</b><small>Unggah ulang berkas Excel absensi · Admin</small></div>${ic('chev', 20)}</button><button class="card li" id="devAdm" style="width:100%;padding:16px 20px"><span class="ic">${ic('check', 20)}</span><div><b>Perangkat Karyawan</b><small>${devPending ? `${devPending} menunggu persetujuan` : 'Setujui ponsel untuk check in'} · Admin</small></div>${ic('chev', 20)}</button>` : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
     ${cutiHTML()}<div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
     <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Portal Hub 1.0 · Mekar Jaya Sentosa</div>`;
 }
@@ -364,7 +364,7 @@ function showLogin() {
     <div id="pick"><div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="rq" type="search" placeholder="Cari nama..." autocomplete="off"></div><div class="rl" id="rl"></div></div>
     <div id="chosen" hidden></div>
     <label class="fld" id="pinf" hidden><span>PIN (6 angka)</span><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
-    <div class="err" id="lerr" role="alert"></div><button class="btn" id="go" type="submit" hidden>Login</button></form>`;
+    <div class="err" id="lerr" role="alert"></div><button class="btn" id="go" type="submit" hidden>Masuk ke Obrolan</button></form>`;
   const paint = () => {
     const t = $('#rq').value.trim().toLowerCase(), list = roster.filter(r => !t || (r.name + ' ' + r.title).toLowerCase().includes(t));
     $('#rl').innerHTML = list.length ? list.map(r => `<button type="button" class="li" data-r="${r.id}">${av(r, 's')}<div><b>${esc(r.name)}</b><small>${esc(r.title)}</small></div></button>`).join('') : '<div class="empty">Nama tidak ditemukan.</div>';
@@ -565,6 +565,35 @@ function attSheet() {
     e.target.value = '';
   };
 }
+// ---------- Perangkat (cegah check in lewat ponsel orang lain) ----------
+function devBanner() {
+  if (dev && dev.on && dev.status === 'pending') return '<div class="banner" style="margin:0 0 12px"><b>Perangkat ini belum disetujui admin.</b> Chat tetap bisa dipakai, tetapi check in/out hanya dari ponselmu sendiri yang sudah terdaftar. Permintaan persetujuan sudah dikirim ke admin.</div>';
+  if (admin && devPending) return `<div class="banner" style="margin:0 0 12px"><b>${devPending} perangkat karyawan menunggu persetujuan.</b> Buka Profil → Perangkat Karyawan.</div>`;
+  return '';
+}
+function devCard() {
+  if (!dev || !dev.on) return '';
+  const ok = dev.status === 'approved';
+  return `<div class="card li" style="padding:14px 20px"><span class="ic ${ok ? 'ok' : ''}">${ic(ok ? 'check' : 'clock', 20)}</span><div><b>Perangkat ini</b><small>${esc(dev.label)} · ${ok ? 'Terdaftar untuk check in' : 'Menunggu persetujuan admin'}</small></div></div>`;
+}
+async function devSheet() {
+  const sh = $('#sheet'); sh.hidden = false;
+  sh.innerHTML = `<div class="sh"><h3>Perangkat Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3><div id="dvb"><div class="empty">Memuat…</div></div></div>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+  await devLoad({ a: 'devlist' });
+}
+async function devLoad(body) {
+  const r = await api(body), el = $('#dvb'); if (!el) return;
+  if (!r || r.type !== 'devlist') { el.innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; return; }
+  const pend = r.list.filter(x => x.status === 'pending'), appr = r.list.filter(x => x.status === 'approved');
+  const row = (x, btns) => `<div class="li" style="align-items:flex-start"><div><b>${esc(x.name)}${x.shared ? ' <span class="pill" style="background:#fef2f2;color:var(--err)">dipakai &gt;1 akun</span>' : ''}</b><small>${esc(x.label)}${x.title ? ' · ' + esc(x.title) : ''}<br>Pertama terlihat ${fmtDT(x.created)}</small></div><div style="display:flex;gap:6px;flex:none">${btns}</div></div>`;
+  el.innerHTML = `<p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Check in/out hanya bisa dari perangkat yang disetujui di sini (satu akun satu perangkat). Menyetujui perangkat baru otomatis menggantikan perangkat lama akun itu. Periksa nama dan jenis ponselnya sebelum menyetujui.</p>
+    ${r.msg ? `<div class="err" style="color:var(--sec);margin:0 0 8px">${esc(r.msg)}</div>` : ''}
+    <div class="sec" style="margin:8px 0 0"><h3 class="h" style="font-size:14px">Menunggu persetujuan (${pend.length})</h3>${pend.length > 1 ? '<button class="chip" id="dvall">Setujui semua</button>' : ''}</div>
+    ${pend.map(x => row(x, `<button class="chip on" data-dva="${x.uid}|${x.dh}">Setujui</button><button class="chip" data-dvr="${x.uid}|${x.dh}">Tolak</button>`)).join('') || '<div class="empty" style="margin:8px 0">Tidak ada permintaan.</div>'}
+    <div class="sec" style="margin:16px 0 0"><h3 class="h" style="font-size:14px">Terdaftar (${appr.length})</h3></div>
+    ${appr.map(x => row(x, `<button class="chip" data-dvr="${x.uid}|${x.dh}">Cabut</button>`)).join('') || '<div class="empty" style="margin:8px 0">Belum ada perangkat terdaftar.</div>'}`;
+}
 function empSheet() {
   const sh = $('#sheet'); sh.hidden = false;
   sh.innerHTML = `<form class="sh" id="ef"><h3>Tambah Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
@@ -610,7 +639,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -634,6 +663,10 @@ document.addEventListener('click', e => {
   else if (t.id === 'emp') empSheet();
   else if (t.id === 'cutiAdm') cutiSheet();
   else if (t.id === 'attAdm') attSheet();
+  else if (t.id === 'devAdm') devSheet();
+  else if (t.id === 'dvall') { if (confirm('Setujui perangkat untuk semua akun yang belum punya perangkat terdaftar?\nPastikan daftar nama dan jenis ponselnya sudah kamu periksa.')) devLoad({ a: 'devapproveall' }); }
+  else if (t.dataset.dva) devLoad({ a: 'devapprove', uid: t.dataset.dva.split('|')[0], dh: t.dataset.dva.split('|')[1] });
+  else if (t.dataset.dvr) { if (confirm('Cabut/tolak perangkat ini?')) devLoad({ a: 'devrevoke', uid: t.dataset.dvr.split('|')[0], dh: t.dataset.dvr.split('|')[1] }); }
   else if (t.id === 'bell') { tab = 'chat'; filter = 'unread'; render(); }
   else if (t.id === 'meBtn') { tab = 'me'; render(); }
   else if (t.id === 'copy') { const s = t.querySelector('span:last-child') || t; try { navigator.clipboard.writeText(location.origin); } catch {} s.textContent = 'Alamat disalin'; setTimeout(render, 1200); }
