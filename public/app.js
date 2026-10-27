@@ -1,13 +1,13 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'home', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'home', filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -88,7 +88,7 @@ function handle(d) {
   else if (d.type === 'init') {
     if (d.session) { session = d.session; ls.set('hub-session', session); }
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
-    me = d.me; admin = !!d.admin; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
+    me = d.me; admin = !!d.admin; helper = !!d.helper; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
@@ -192,7 +192,7 @@ function renderChat() {
 
 // ---------- Kehadiran hari ini (check-in GPS) ----------
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.8751736305230855, lng: 109.67676355886489, r: 15 };
+let hc = null, hcMap = null, hcL = null, geo = { st: 'idle', lat: 0, lng: 0, acc: 0 }, geoW = null, ci = null, hcBusy = false, hcMsg = '', hcT = null, office = { lat: -6.8751736305230855, lng: 109.67676355886489, r: 20 };
 const wibHM = ts => new Date(ts + 7 * 36e5).toISOString().slice(11, 16);
 const gDist = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742000 * Math.asin(Math.min(1, Math.sqrt(h))); };
 const hq = x => hc.querySelector(x);
@@ -308,7 +308,7 @@ function renderHome() {
 
 function renderMe() {
   const u = users.get(me);
-  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${admin ? adminMenu() : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
+  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${admin || helper ? adminMenu() : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
     ${cutiHTML()}<div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
     <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Portal Hub 1.0 · Mekar Jaya Sentosa</div>`;
 }
@@ -568,9 +568,33 @@ function attSheet() {
 // ---------- Perangkat (cegah check in lewat ponsel orang lain) ----------
 // Menu admin berbentuk kisi ikon (4 kolom), seperti menu utama aplikasi mobile
 function adminMenu() {
-  const items = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE']];
-  return `<div class="card" style="padding:16px 12px 10px"><h3 class="h" style="font-size:16px;margin:0 6px 12px">Menu Admin</h3><div class="mgrid">${items.map(([id, i, l, c, bg]) =>
+  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3']];
+  const items = admin ? all : all.filter(i => ['cutiAdm', 'attAdm'].includes(i[0])); // admin pembantu: hanya Data Cuti dan Data Absensi
+  return `<div class="card" style="padding:16px 12px 10px"><h3 class="h" style="font-size:16px;margin:0 6px 12px">${admin ? 'Menu Admin' : 'Menu Admin Data'}</h3><div class="mgrid">${items.map(([id, i, l, c, bg]) =>
     `<button class="mi" id="${id}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}${id === 'devAdm' && devPending ? `<i class="mb">${devPending}</i>` : ''}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
+}
+// ---------- Kelola admin pembantu (khusus admin utama) ----------
+function admPaint() {
+  const el = $('#alist'); if (!el) return;
+  const t = ($('#aq').value || '').trim().toLowerCase(), hs = admRows.filter(x => x.helper);
+  $('#acnt').textContent = hs.length;
+  const row = x => `<div class="li">${av(x, 's')}<div><b>${esc(x.name)}</b><small>${esc(x.title)}</small></div><button type="button" class="chip ${x.helper ? '' : 'on'}" data-hl="${x.id}|${x.helper ? 0 : 1}">${x.helper ? 'Cabut' : 'Jadikan admin'}</button></div>`;
+  const list = admRows.filter(x => !t || (x.name + ' ' + x.title).toLowerCase().includes(t)).sort((a, b) => (b.helper - a.helper) || a.name.localeCompare(b.name));
+  el.innerHTML = list.map(row).join('') || '<div class="empty">Tidak ditemukan.</div>';
+}
+async function admLoad(body) {
+  const r = await api(body); if (!r || r.type !== 'adminlist') { const e = $('#alist'); if (e) e.innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; return; }
+  admRows = r.list; admPaint();
+}
+async function admSheet() {
+  const sh = $('#sheet'); sh.hidden = false;
+  sh.innerHTML = `<div class="sh"><h3>Kelola Admin<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+    <p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Pilih karyawan yang boleh membantu menginput data. <b>Admin pembantu</b> hanya melihat menu <b>Data Cuti</b> dan <b>Data Absensi</b> (unggah berkas Excel). Menu lain tetap khusus admin utama. Jumlahnya bebas, dan bisa dicabut kapan saja.</p>
+    <div class="sec" style="margin:8px 0"><h3 class="h" style="font-size:14px">Admin pembantu (<span id="acnt">0</span>)</h3></div>
+    <div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="aq" type="search" placeholder="Cari nama atau jabatan..." autocomplete="off"></div><div id="alist"><div class="empty">Memuat…</div></div></div>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+  $('#aq').oninput = admPaint;
+  await admLoad({ a: 'adminlist' });
 }
 function devBanner() {
   if (dev && dev.on && dev.status === 'pending') return '<div class="banner" style="margin:0 0 12px"><b>Perangkat ini belum disetujui admin.</b> Chat tetap bisa dipakai, tetapi check in/out hanya dari ponselmu sendiri yang sudah terdaftar. Permintaan persetujuan sudah dikirim ke admin.</div>';
@@ -645,7 +669,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -670,6 +694,8 @@ document.addEventListener('click', e => {
   else if (t.id === 'cutiAdm') cutiSheet();
   else if (t.id === 'attAdm') attSheet();
   else if (t.id === 'devAdm') devSheet();
+  else if (t.id === 'admAdm') admSheet();
+  else if (t.dataset.hl) admLoad({ a: 'sethelper', id: t.dataset.hl.split('|')[0], on: t.dataset.hl.split('|')[1] === '1' });
   else if (t.id === 'dvall') { if (confirm('Setujui perangkat untuk semua akun yang belum punya perangkat terdaftar?\nPastikan daftar nama dan jenis ponselnya sudah kamu periksa.')) devLoad({ a: 'devapproveall' }); }
   else if (t.dataset.dva) devLoad({ a: 'devapprove', uid: t.dataset.dva.split('|')[0], dh: t.dataset.dva.split('|')[1] });
   else if (t.dataset.dvr) { if (confirm('Cabut/tolak perangkat ini?')) devLoad({ a: 'devrevoke', uid: t.dataset.dvr.split('|')[0], dh: t.dataset.dvr.split('|')[1] }); }
