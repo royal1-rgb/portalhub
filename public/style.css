@@ -172,3 +172,10 @@ main.nw .nseg{margin:0}
 @keyframes mdf{from{opacity:0}to{opacity:1}}
 
 .hcard{margin-bottom:12px}
+
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 4px}
+.mi{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 2px;min-height:44px;text-align:center}
+.mi:active{transform:scale(.96)}
+.mic{position:relative;width:52px;height:52px;border-radius:18px;display:grid;place-items:center}
+.ml{font:600 11px/14px var(--ff);color:var(--ink);max-width:76px}
+.mb{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--err);color:#fff;font:700 10px/18px var(--ff);text-align:center;font-style:normal;box-shadow:0 0 0 2px var(--card)}
