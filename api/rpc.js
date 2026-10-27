@@ -66,7 +66,7 @@ async function snapshot(uid, session, ctx, viaPin) {
   const crow = ck.rows.map(r => L.checkinRow(Number(r.ts), r.out_ts && Number(r.out_ts))), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
   const chk = crow.length ? { has: true, file: 'Check-in GPS', total: crow.length, people: 1, from: cd[0], to: cd[cd.length - 1], updatedAt: Math.max(...ck.rows.map(r => Number(r.ts))), by: 'Check-in GPS', rows: crow } : { has: false };
   const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
-  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, helper: !!u.helper, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -134,6 +134,18 @@ async function route(d, ip, ctx) {
       const rows = (await q("SELECT uid, dh, label, status, created, seen FROM devices ORDER BY (status = 'pending') DESC, created DESC")).rows;
       const shared = {}; rows.filter(r => r.status === 'approved').forEach(r => (shared[r.dh] = (shared[r.dh] || 0) + 1));
       return { type: 'devlist', msg, list: rows.map(r => ({ uid: r.uid, dh: r.dh, name: (db.users[r.uid] || {}).name || '?', title: (db.users[r.uid] || {}).title || '', label: r.label, status: r.status, created: Number(r.created), seen: Number(r.seen), shared: r.status === 'approved' && shared[r.dh] > 1 })) };
+    }
+    case 'adminlist': case 'sethelper': { // hanya admin utama yang boleh menunjuk/mencabut admin pembantu
+      const helperList = db => ({ type: 'adminlist', list: Object.values(db.users).filter(x => !x.admin).map(x => ({ id: x.id, name: x.name, title: x.title, helper: !!x.helper })).sort((a, b) => a.name.localeCompare(b.name)) });
+      if (d.a === 'adminlist') { const db = await getDb(true); return (db.users[uid] || {}).admin ? helperList(db) : { type: 'noop' }; }
+      let changed = false;
+      const out = await mutate(async db => {
+        if (!(db.users[uid] || {}).admin) return null;
+        const tg = db.users[d.id]; if (tg && !tg.admin && !!tg.helper !== !!d.on) { tg.helper = !!d.on; changed = true; }
+        return helperList(db);
+      });
+      if (changed) await bumpVer();
+      return out || { type: 'noop' };
     }
     case 'checkin': case 'checkout': {
       const out = d.a === 'checkout', E = msg => ({ type: out ? 'checkout_err' : 'checkin_err', msg }), lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
@@ -222,7 +234,7 @@ async function route(d, ip, ctx) {
 async function upload(req, res, raw) {
   const au = await authed(req.headers['x-session']);
   const db = au && await getDb(true);
-  if (!au || !(db.users[au.uid] || {}).admin) return json(res, 403, { error: 'Hanya admin yang dapat mengunggah data.' });
+  if (!au || !L.canData(db.users[au.uid])) return json(res, 403, { error: 'Hanya admin yang dapat mengunggah data.' });
   if (req.headers['x-kind'] === 'absensi') return uploadAbsensi(req, res, raw, db, au);
   try {
     const r = await L.parseCuti(raw, db.users);
