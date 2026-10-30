@@ -80,7 +80,7 @@ function handle(d) {
   else if (d.type === 'checkout_confirm') { hcBusy = false; updHc(); askEarlyOut(d.hm); }
   else if (d.type === 'checkin_err' || d.type === 'checkout_err') { hcBusy = false; hcMsg = d.msg; updHc(); }
   else if (d.type === 'emp_err') empMsg(d.msg, false);
-  else if (d.type === 'cuti') { cuti = d.cuti; if (tab === 'me') render(); const ci = $('#cinfo'); if (ci) ci.innerHTML = cutiInfo(); }
+  else if (d.type === 'cuti') { cuti = d.cuti; if (tab === 'me' || tab === 'cuti') render(); const ci = $('#cinfo'); if (ci) ci.innerHTML = cutiInfo(); }
   else if (d.type === 'quotas') { quotas = d.map; if (empPaint) empPaint(); }
   else if (d.type === 'quota_err') empMsg(d.msg, false);
   else if (d.type === 'pin_ok') pinDone();
@@ -118,7 +118,7 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', news: 'Berita Dunia Kerja', me: 'Profil Karyawan' };
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'Berita Dunia Kerja', me: 'Profil Karyawan' };
 function render() {
   if (!me) return;
   const u = users.get(me), n = totalUnread();
@@ -126,9 +126,12 @@ function render() {
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
-  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['att', 'clock', 'Absensi'], ['news', 'news', 'News'], ['me', 'person', 'Profil']].map(([k, i, l]) =>
-    `<button data-tab="${k}" class="${tab === k ? 'on' : ''}"${tab === k ? ' aria-current="page"' : ''}><span style="position:relative">${ic(i)}${k === 'chat' && n ? `<span class="badge">${n}</span>` : ''}</span>${l}</button>`).join('');
-  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'news') renderNews(); else renderMe();
+  const sub = tab === 'att' || tab === 'cuti'; // halaman yang dibuka dari kisi menu Beranda (tidak ada di menu bawah)
+  $('#topback').hidden = !sub; $('#topback').innerHTML = ic('back'); document.querySelector('.brand .logo').hidden = sub;
+  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']].map(([k, i, l]) => {
+    const on = tab === k || (sub && k === 'home');
+    return `<button data-tab="${k}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}><span style="position:relative">${ic(i)}${k === 'chat' && n ? `<span class="badge">${n}</span>` : ''}</span>${l}</button>`; }).join('');
+  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'cuti') renderCuti(); else if (tab === 'news') renderNews(); else renderMe();
 }
 
 const NEWS_URL = 'https://www.okezone.com/tag/dunia-kerja', NCATS = [['bisnis', 'Bisnis'], ['ekonomi', 'Ekonomi'], ['terkini', 'Terkini'], ['lifestyle', 'Lifestyle']];
@@ -296,6 +299,7 @@ function renderHome() {
   $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
     ${devBanner()}
     <div id="hcslot"></div>
+    ${homeMenu()}
     <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
     <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
@@ -309,7 +313,7 @@ function renderHome() {
 function renderMe() {
   const u = users.get(me);
   $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${admin || helper ? adminMenu() : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
-    ${cutiHTML()}<div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
+    <div class="card" style="padding:4px 20px"><button class="li" id="copy"><span class="ic">${ic('link', 20)}</span><div><b>Alamat aplikasi</b><small>${esc(location.origin)}</small></div>${ic('copy', 18)}</button></div>
     <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Portal Hub 1.0 · Mekar Jaya Sentosa</div>`;
 }
 
@@ -403,6 +407,13 @@ function pinSheet() {
 const nf = x => Number.isInteger(x) ? String(x) : String(x).replace('.', ',');
 const fmtDT = t => new Date(t).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':');
 const fmtD = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
+// Kisi menu di Beranda (tanpa judul): Absensi dan Info Cuti
+function homeMenu() {
+  const items = [['att', 'clock', 'Absensi', '#D97706', '#FEF3E2'], ['cuti', 'cal', 'Info Cuti', '#059669', '#E6F7F0']];
+  return `<div class="card" style="padding:16px 12px 10px"><div class="mgrid">${items.map(([k, i, l, c, bg]) =>
+    `<button class="mi" data-go="${k}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
+}
+function renderCuti() { $('#main').innerHTML = cutiHTML(); }
 function cutiHTML() {
   const c = cuti, ok = c && c.has;
   const head = `<div class="sec" style="margin:8px 0 10px;align-items:flex-end"><div><h3 class="h">Informasi &amp; Sisa Cuti</h3>${ok ? `<small style="color:var(--ink2)">Periode Tahun ${c.year}</small>` : ''}</div>${ok ? '<span class="aktif">Aktif</span>' : ''}</div>`;
@@ -669,7 +680,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -679,7 +690,8 @@ document.addEventListener('click', e => {
     const u = users.get(t.dataset.q), cur = (quotas[t.dataset.q] || {}).q;
     const v = prompt(`Jatah cuti ${u ? u.name : ''} (hari per tahun):`, cur ?? '');
     if (v !== null) send({ type: 'setquota', id: t.dataset.q, quota: v });
-  } else if (t.dataset.go) { tab = t.dataset.go; render(); }
+  } else if (t.dataset.go) { tab = t.dataset.go; render(); $('#main').scrollTop = 0; }
+  else if (t.id === 'topback') { tab = 'home'; render(); $('#main').scrollTop = 0; }
   else if (t.dataset.f) { filter = t.dataset.f; renderChat(); }
   else if (t.hasAttribute('data-sort')) { attSort = attSort === 'desc' ? 'asc' : 'desc'; paintDetail(); }
   else if (t.dataset.am) setMonth(t.dataset.am);
