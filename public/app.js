@@ -3,11 +3,14 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const P = { shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
+// Menu terakhir disimpan per tab browser: refresh tetap di menu yang sama, login baru selalu mulai dari Beranda
+const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
+const savedTab = () => { const t = ss.get('hub-tab'); return ['home', 'chat', 'news', 'me', 'att', 'cuti'].includes(t) ? t : 'home'; };
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
-let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = 'home', filter = 'all', q = '', open = null, typing = {}, connected = false;
+let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -86,7 +89,7 @@ function handle(d) {
   else if (d.type === 'pin_ok') pinDone();
   else if (d.type === 'pin_err') pinErr(d.msg);
   else if (d.type === 'init') {
-    if (d.session) { session = d.session; ls.set('hub-session', session); }
+    if (d.session) { const fresh = d.session !== session; session = d.session; ls.set('hub-session', session); if (fresh) tab = 'home'; } // login baru -> mulai dari Beranda; pemulihan sesi (refresh) -> menu terakhir
     authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
     me = d.me; admin = !!d.admin; helper = !!d.helper; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
@@ -121,6 +124,7 @@ function paintOff() {
 const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'Berita Dunia Kerja', me: 'Profil Karyawan' };
 function render() {
   if (!me) return;
+  ss.set('hub-tab', tab);
   const u = users.get(me), n = totalUnread();
   $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'home') stopGeo();
   $('#meBtn').innerHTML = av(u, 's');
@@ -714,7 +718,7 @@ document.addEventListener('click', e => {
   else if (t.id === 'bell') { tab = 'chat'; filter = 'unread'; render(); }
   else if (t.id === 'meBtn') { tab = 'me'; render(); }
   else if (t.id === 'copy') { const s = t.querySelector('span:last-child') || t; try { navigator.clipboard.writeText(location.origin); } catch {} s.textContent = 'Alamat disalin'; setTimeout(render, 1200); }
-  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); location.reload(); }); }
+  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); }
 });
 
 $('#nav').innerHTML = ''; $('#title').textContent = TITLES.home;
