@@ -122,6 +122,22 @@ function paintOff() {
 
 // ---------- render utama ----------
 const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'News Update', me: 'Profil Karyawan' };
+const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
+function paintNav(n, sub) { // menu dibuat sekali lalu hanya diubah kelasnya, supaya gelembung penanda bergeser dengan animasi halus
+  const nav = $('#nav'); let first = false;
+  if (!nav.dataset.built) {
+    first = true; nav.classList.add('noanim'); nav.dataset.built = '1'; nav.style.setProperty('--n', NAV.length);
+    nav.innerHTML = '<i class="nb"></i>' + NAV.map(([k, i, l]) => `<button data-tab="${k}"><span class="ni">${ic(i)}<span class="badge" hidden></span></span><span class="nl">${l}</span></button>`).join('');
+  }
+  const idx = Math.max(0, NAV.findIndex(([k]) => tab === k || (sub && k === 'home')));
+  nav.style.setProperty('--i', idx);
+  [...nav.querySelectorAll('button')].forEach((b, j) => {
+    const on = j === idx, bg = b.querySelector('.badge'), k = NAV[j][0];
+    b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    const show = k === 'chat' && n > 0; bg.hidden = !show; if (show) bg.textContent = n;
+  });
+  if (first) requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.remove('noanim')));
+}
 function render() {
   if (!me) return;
   ss.set('hub-tab', tab);
@@ -132,9 +148,7 @@ function render() {
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
   const sub = tab === 'att' || tab === 'cuti'; // halaman yang dibuka dari kisi menu Beranda (tidak ada di menu bawah)
   $('#topback').hidden = !sub; $('#topback').innerHTML = ic('back'); document.querySelector('.brand .logo').hidden = sub;
-  $('#nav').innerHTML = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']].map(([k, i, l]) => {
-    const on = tab === k || (sub && k === 'home');
-    return `<button data-tab="${k}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}><span style="position:relative">${ic(i)}${k === 'chat' && n ? `<span class="badge">${n}</span>` : ''}</span>${l}</button>`; }).join('');
+  paintNav(n, sub);
   if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'cuti') renderCuti(); else if (tab === 'news') renderNews(); else renderMe();
 }
 
