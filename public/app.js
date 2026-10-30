@@ -121,7 +121,7 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'News', me: 'Profil Karyawan' };
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'News Update', me: 'Profil Karyawan' };
 function render() {
   if (!me) return;
   ss.set('hub-tab', tab);
