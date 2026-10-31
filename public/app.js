@@ -1,7 +1,7 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 // Menu terakhir disimpan per tab browser: refresh tetap di menu yang sama, login baru selalu mulai dari Beranda
 const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
@@ -10,6 +10,14 @@ const ls = { get: k => { try { return localStorage.getItem(k); } catch { return 
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
+// Splash tampil minimal 2 detik, lalu halaman login (atau aplikasi bila sesi masih berlaku)
+let lastPin = '', forcePin = false, pinSet = false, splashOn = true;
+const splashMin = new Promise(r => setTimeout(r, 2000));
+function hideSplash() {
+  if (!splashOn) return; splashOn = false;
+  splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
+}
+const lastUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
 let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
@@ -90,7 +98,9 @@ function handle(d) {
   else if (d.type === 'pin_err') pinErr(d.msg);
   else if (d.type === 'init') {
     if (d.session) { const fresh = d.session !== session; session = d.session; ls.set('hub-session', session); if (fresh) tab = 'home'; } // login baru -> mulai dari Beranda; pemulihan sesi (refresh) -> menu terakhir
-    authed = true; pinChanged = d.pinChanged; $('#login').hidden = true; $('#login').innerHTML = '';
+    authed = true; pinChanged = !!d.pinChanged || pinSet; hideSplash();
+    { const m = d.users.find(x => x.id === d.me); if (m) ls.set('hub-last', JSON.stringify({ id: m.id, name: m.name, title: m.title })); }
+    if (!pinChanged) { if (!forcePin) showSetPin(); } else { forcePin = false; $('#login').hidden = true; $('#login').innerHTML = ''; }
     me = d.me; admin = !!d.admin; helper = !!d.helper; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
@@ -379,34 +389,71 @@ function paintTyping() {
 }
 
 // ---------- form profil & sheet ----------
+const LGX_TOP = `<div class="lgx-top"><div class="lgc"><img src="/logo-mark.png" alt="Mjs Group"></div><b>Mjs Group</b>
+  <svg viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 38C40 18 70 24 105 30S170 14 215 22s80-10 110-6 55 8 75 2V70H0z" fill="#fff" opacity=".28"/><path d="M0 48C50 30 90 40 135 44s90-22 140-16 85 14 125 4V70H0z" fill="#fff" opacity=".5"/><path d="M0 56C60 46 110 56 170 56s120-16 170-10 40 4 60 2V70H0z" fill="#fff"/></svg></div>`;
+const eyeBtn = `<button type="button" class="eye" aria-label="Tampilkan PIN">${ic('eye', 20)}</button>`;
+function eyeBind(root) { root.querySelectorAll('.eye').forEach(b => b.onclick = () => { const i = b.previousElementSibling, t = i.type === 'password'; root.querySelectorAll('.pw input').forEach(x => x.type = t ? 'text' : 'password'); }); }
 function showLogin() {
-  const el = $('#login'); el.hidden = false; let sel = null;
- el.innerHTML = `<form class="lg" id="pf"><div class="lg-brand"><img class="logo" src="/logo.jpg" width="72" height="72" alt="Mjs Group"><span>Mjs Group</span></div>
-    <h1>Portal Hub Employee</h1><p>Pilih namamu, lalu masukkan PIN untuk masuk.</p>
-    <div id="pick"><div class="search" style="margin-bottom:8px">${ic('search', 20)}<input id="rq" type="search" placeholder="Cari nama..." autocomplete="off"></div><div class="rl" id="rl"></div></div>
-    <div id="chosen" hidden></div>
-    <label class="fld" id="pinf" hidden><span>PIN (6 angka)</span><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
-    <div class="err" id="lerr" role="alert"></div><button class="btn" id="go" type="submit" hidden>Login</button></form>`;
+  const el = $('#login'); el.hidden = false; forcePin = false; pinSet = false; lastPin = ''; el.classList.toggle('live', !splashOn);
+  let sel = null; const lu = lastUser(); if (lu) sel = roster.find(r => r.id === lu.id) || null;
+  const back = !!sel, nm = n => { const w = n.trim().split(/\s+/); return w.slice(0, 2).join(' '); };
+  el.innerHTML = `<div class="lgx">${LGX_TOP}<form class="lgx-f" id="pf" autocomplete="off">
+    <h2>${back ? 'Halo, ' + esc(nm(sel.name)) : 'Masuk ke Akun Anda'}</h2>
+    <p class="lgx-s">${back ? 'Masukkan PIN untuk melanjutkan.' : 'Pertama kali masuk? Ketik namamu, lalu pakai PIN awal dari admin. Kamu akan diminta membuat PIN baru.'}</p>
+    <label class="lf"><span>Nama (Username)</span><input id="un" type="text" placeholder="Ketik namamu" autocomplete="off" autocapitalize="words" spellcheck="false" value="${back ? esc(sel.name) : ''}"><div class="sug" id="sug" hidden></div></label>
+    <label class="lf"><span>PIN</span><div class="pw"><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Masukkan PIN 6 angka" autocomplete="current-password">${eyeBtn}</div></label>
+    <div class="err" id="lerr" role="alert"></div>
+    <div class="lgx-btns"><button class="pill-b" id="go" type="submit">Masuk</button>${back ? '<button class="pill-o" id="chg" type="button">Ganti Akun</button>' : ''}</div></form></div>`;
+  eyeBind(el);
+  const un = $('#un'), sug = $('#sug'), norm = x => String(x || '').toUpperCase().replace(/\s+/g, ' ').trim();
   const paint = () => {
-    const t = $('#rq').value.trim().toLowerCase(), list = roster.filter(r => !t || (r.name + ' ' + r.title).toLowerCase().includes(t));
-    $('#rl').innerHTML = list.length ? list.map(r => `<button type="button" class="li" data-r="${r.id}">${av(r, 's')}<div><b>${esc(r.name)}</b><small>${esc(r.title)}</small></div></button>`).join('') : '<div class="empty">Nama tidak ditemukan.</div>';
+    const t = norm(un.value); if (!t || (sel && norm(sel.name) === t)) { sug.hidden = true; return; }
+    const list = roster.filter(r => norm(r.name + ' ' + r.title).includes(t)).slice(0, 6);
+    sug.hidden = !list.length;
+    sug.innerHTML = list.map(r => `<button type="button" class="li" data-r="${r.id}">${av(r, 's')}<div><b>${esc(r.name)}</b><small>${esc(r.title)}</small></div></button>`).join('');
   };
-  const choose = id => {
-    sel = roster.find(r => r.id === id); const on = !!sel;
-    $('#pick').hidden = on; $('#chosen').hidden = !on; $('#pinf').hidden = !on; $('#go').hidden = !on; loginErr('');
-    if (on) { $('#chosen').innerHTML = `<div class="li" style="border:0;padding:0 0 16px">${av(sel, '')}<div><b>${esc(sel.name)}</b><small>${esc(sel.title)}</small></div><button type="button" class="btn sec2 sm" id="chg" style="height:36px;padding:0 14px">Ganti</button></div>`; $('#chg').onclick = () => choose(null); $('#pn').focus(); }
-    else { $('#pn').value = ''; $('#rq').focus(); }
-  };
-  $('#rq').oninput = paint; paint();
-  $('#rl').onclick = e => { const b = e.target.closest('[data-r]'); if (b) choose(b.dataset.r); };
+  const pick = r => { sel = r; un.value = r.name; sug.hidden = true; $('#pn').focus(); };
+  un.oninput = () => { if (sel && norm(sel.name) !== norm(un.value)) sel = null; paint(); loginErr(''); };
+  un.onfocus = paint;
+  sug.onpointerdown = e => { const b = e.target.closest('[data-r]'); if (b) { e.preventDefault(); pick(roster.find(r => r.id === b.dataset.r)); } };
+  if (back) { const c = $('#chg'); c.onclick = () => { ls.del('hub-last'); sel = null; un.value = ''; $('#pn').value = ''; $('.lgx-f h2').textContent = 'Masuk ke Akun Anda'; $('.lgx-s').textContent = 'Ketik namamu, lalu masukkan PIN.'; c.remove(); un.focus(); }; }
   $('#pn').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); };
   $('#pf').onsubmit = e => {
     e.preventDefault(); const pin = $('#pn').value;
-    if (!sel) return; if (pin.length !== 6) return loginErr('PIN terdiri dari 6 angka.');
-    send({ type: 'login', id: sel.id, pin });
+    if (!sel) { const t = norm(un.value), ex = roster.filter(r => norm(r.name) === t), part = roster.filter(r => norm(r.name).includes(t)); sel = ex.length === 1 ? ex[0] : (t && part.length === 1 ? part[0] : null); if (sel) un.value = sel.name; }
+    if (!sel) return loginErr('Nama tidak ditemukan. Ketik lalu pilih namamu dari daftar.', true);
+    if (pin.length !== 6) return loginErr('PIN terdiri dari 6 angka.');
+    lastPin = pin; const go = $('#go'); go.disabled = true; go.textContent = 'Memproses…';
+    send({ type: 'login', id: sel.id, pin }).then(r => { if (!r) loginErr('Tidak dapat terhubung ke server. Coba lagi.'); });
+  };
+  hideSplash();
+}
+function loginErr(m, keep) { const e = $('#lerr'); if (e) e.textContent = m || ''; const go = $('#go'); if (go) { go.disabled = false; go.textContent = 'Masuk'; } if (m && !keep && $('#pn')) { $('#pn').value = ''; $('#pn').focus(); } }
+// Login pertama (masih PIN bawaan): wajib membuat PIN baru sebelum memakai aplikasi
+function showSetPin() {
+  forcePin = true; const el = $('#login'); el.hidden = false; el.classList.add('live');
+  const needOld = !lastPin, fld = (l, ac) => `<label class="lf"><span>${l}</span><div class="pw"><input class="pi" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6 angka" autocomplete="${ac}">${eyeBtn}</div></label>`;
+  el.innerHTML = `<div class="lgx">${LGX_TOP}<form class="lgx-f" id="pnf" autocomplete="off">
+    <h2>Buat PIN Baru</h2>
+    <p class="lgx-s">Ini login pertamamu. Demi keamanan, ganti PIN bawaan dengan PIN pilihanmu sendiri sebelum melanjutkan.</p>
+    ${needOld ? fld('PIN saat ini', 'current-password') : ''}${fld('PIN baru (6 angka)', 'new-password')}${fld('Ulangi PIN baru', 'new-password')}
+    <div class="err" id="perr" role="alert"></div>
+    <div class="lgx-btns"><button class="pill-b" id="sv" type="submit">Simpan &amp; Lanjutkan</button></div>
+    <button class="lgx-link" type="button" id="lo">Keluar</button></form></div>`;
+  eyeBind(el);
+  const ins = [...el.querySelectorAll('.pi')]; ins[0].focus();
+  ins.forEach(i => i.oninput = () => { i.value = i.value.replace(/\D/g, ''); });
+  $('#lo').onclick = () => { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); };
+  $('#pnf').onsubmit = e => {
+    e.preventDefault(); const v = ins.map(i => i.value), old = needOld ? v[0] : lastPin, b = v[needOld ? 1 : 0], c = v[needOld ? 2 : 1];
+    if (needOld && old.length !== 6) return pinErr('PIN saat ini terdiri dari 6 angka.');
+    if (b.length !== 6) return pinErr('PIN baru harus 6 angka.');
+    if (b !== c) return pinErr('Pengulangan PIN tidak sama.');
+    if (b === old) return pinErr('PIN baru tidak boleh sama dengan PIN lama.');
+    const sv = $('#sv'); sv.disabled = true; sv.textContent = 'Menyimpan…'; pinErr('');
+    send({ type: 'changepin', old, pin: b }).then(r => { if (!r) pinErr('Tidak dapat terhubung ke server. Coba lagi.'); });
   };
 }
-function loginErr(m) { const e = $('#lerr'); if (e) e.textContent = m || ''; if (m && $('#pn')) { $('#pn').value = ''; $('#pn').focus(); } }
 function pinSheet() {
   const sh = $('#sheet'); sh.hidden = false;
   sh.innerHTML = `<form class="sh" id="pnf"><h3>Ubah PIN<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
@@ -773,9 +820,15 @@ function empMsg(m, ok, keep) {
   e.textContent = m; e.style.color = ok ? 'var(--sec)' : 'var(--err)';
   if (ok && !keep) { ['#en', '#et', '#ep', '#ej'].forEach(i => ($(i).value = '')); $('#en').focus(); }
 }
-function pinErr(m) { const e = $('#perr'); if (e) e.textContent = m; }
+function pinErr(m) { const e = $('#perr'); if (e) e.textContent = m; const sv = $('#sv'); if (sv && m) { sv.disabled = false; sv.innerHTML = 'Simpan &amp; Lanjutkan'; } }
 function pinDone() {
-  pinChanged = true; const sh = $('#sheet');
+  pinChanged = true; pinSet = true; const sh = $('#sheet');
+  if (forcePin) {
+    forcePin = false; lastPin = ''; $('#login').hidden = true; $('#login').innerHTML = '';
+    sh.hidden = false; sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+    sh.innerHTML = `<div class="sh"><h3>PIN berhasil dibuat</h3><p style="margin:0 0 16px;color:var(--ink2)">Mulai sekarang gunakan PIN barumu untuk masuk. Selamat datang di Portal Hub!</p><button class="btn" id="xs">Mulai</button></div>`;
+    render(); return;
+  }
   sh.innerHTML = `<div class="sh"><h3>PIN berhasil diubah</h3><p style="margin:0 0 16px;color:var(--ink2)">Gunakan PIN baru saat masuk di perangkat lain. Perangkat lain yang sedang masuk akan diminta login ulang.</p><button class="btn" id="xs">Selesai</button></div>`;
   render();
 }
