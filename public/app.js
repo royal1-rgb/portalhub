@@ -1,11 +1,11 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 // Menu terakhir disimpan per tab browser: refresh tetap di menu yang sama, login baru selalu mulai dari Beranda
 const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
-const savedTab = () => { const t = ss.get('hub-tab'); return ['home', 'chat', 'news', 'me', 'att', 'cuti'].includes(t) ? t : 'home'; };
+const savedTab = () => { const t = ss.get('hub-tab'); return ['home', 'chat', 'news', 'me', 'att', 'cuti', 'izin'].includes(t) ? t : 'home'; };
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab3'], ['#ffe9cc', '#8a4b00'], ['#fde0ef', '#8f1f55']];
 
@@ -121,7 +121,7 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', news: 'News Update', me: 'Profil Karyawan' };
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', izin: 'Izin Pulang', news: 'News Update', me: 'Profil Karyawan' };
 const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
 function paintNav(n, sub) { // menu dibuat sekali lalu hanya diubah kelasnya, supaya gelembung penanda bergeser dengan animasi halus
   const nav = $('#nav'); let first = false;
@@ -142,14 +142,14 @@ function render() {
   if (!me) return;
   ss.set('hub-tab', tab);
   const u = users.get(me), n = totalUnread();
-  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'home') stopGeo();
+  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'izin') delete $('#main').dataset.iz; if (tab !== 'home') stopGeo();
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
-  const sub = tab === 'att' || tab === 'cuti'; // halaman yang dibuka dari kisi menu Beranda (tidak ada di menu bawah)
+  const sub = tab === 'att' || tab === 'cuti' || tab === 'izin'; // halaman yang dibuka dari kisi menu Beranda (tidak ada di menu bawah)
   $('#topback').hidden = !sub; $('#topback').innerHTML = ic('back'); document.querySelector('.brand .logo').hidden = sub;
   paintNav(n, sub);
-  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'cuti') renderCuti(); else if (tab === 'news') renderNews(); else renderMe();
+  if (tab === 'chat') renderChat(); else if (tab === 'home') renderHome(); else if (tab === 'att') renderAtt(); else if (tab === 'cuti') renderCuti(); else if (tab === 'izin') renderIzin(); else if (tab === 'news') renderNews(); else renderMe();
 }
 
 const NEWS_URL = 'https://www.okezone.com/tag/dunia-kerja', NCATS = [['bisnis', 'Bisnis'], ['ekonomi', 'Ekonomi'], ['terkini', 'Terkini'], ['lifestyle', 'Lifestyle']];
@@ -427,9 +427,89 @@ const fmtDT = t => new Date(t).toLocaleString('id-ID', { day: 'numeric', month: 
 const fmtD = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
 // Kisi menu di Beranda (tanpa judul): Absensi dan Info Cuti
 function homeMenu() {
-  const items = [['att', 'clock', 'Absensi', '#D97706', '#FEF3E2'], ['cuti', 'cal', 'Info Cuti', '#059669', '#E6F7F0']];
+  const items = [['att', 'clock', 'Absensi', '#D97706', '#FEF3E2'], ['cuti', 'cal', 'Info Cuti', '#059669', '#E6F7F0'], ['izin', 'doc', 'Izin', '#7C3AED', '#F1EAFE']];
   return `<div class="card" style="padding:16px 12px 10px"><div class="mgrid">${items.map(([k, i, l, c, bg]) =>
     `<button class="mi" data-go="${k}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
+}
+// ---------- Form Izin Pulang ----------
+const IZIN_TIPE = ['Sakit', 'Orang Tua / Saudara Meninggal', 'Menjalani Pengobatan', 'Mengantar Anak', 'Mengantar Orang Tua / Saudara', 'Lain-lain'];
+let izT = null, izOut = null;
+function izDT(d) {
+  const off = -d.getTimezoneOffset() / 60, z = { 7: 'WIB', 8: 'WITA', 9: 'WIT' }[off] || 'GMT' + (off >= 0 ? '+' : '') + off, p2 = n => String(n).padStart(2, '0');
+  return `${d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${p2(d.getHours())}.${p2(d.getMinutes())} ${z}`;
+}
+function renderIzin(force) {
+  const m = $('#main'); if (!force && m.dataset.iz === '1' && m.firstChild) return; // render ulang oleh pesan baru tidak boleh menghapus isian form
+  m.dataset.iz = '1'; izOut = null; const u = users.get(me) || {}, pi = $('#izprint'); if (pi) pi.remove();
+  m.innerHTML = `<div class="sec" style="margin:8px 0 10px"><div><h3 class="h">Form Izin Pulang</h3><small style="color:var(--ink2)">Isi form, lalu simpan sebagai gambar atau cetak.</small></div></div>
+    <form class="card izf" id="izform" novalidate>
+      <label class="fld"><span>Nama</span><input id="iz-n" value="${esc(u.name || '')}" readonly></label>
+      <label class="fld"><span>Divisi</span><input id="iz-d" value="${esc(u.title || '')}" readonly></label>
+      <label class="fld"><span>Tipe Izin Pulang</span><select id="iz-t" required><option value="" disabled selected>Pilih tipe izin…</option>${IZIN_TIPE.map(t => `<option>${esc(t)}</option>`).join('')}</select></label>
+      <label class="fld"><span>Alasan Pulang <b style="color:var(--err)">*</b></span><textarea id="iz-r" rows="4" maxlength="300" placeholder="Tuliskan alasan pulang…" required></textarea></label>
+      <label class="fld"><span>Tanggal dan Jam Pulang</span><input id="iz-w" readonly></label>
+      <div class="izm"><div class="fl">Mengetahui</div>
+        <div class="izs"><div><div class="izb izb-e"></div><small>HRD</small></div>
+        <div><div class="izb"><canvas id="iz-s" aria-label="Tanda tangan user"></canvas><button type="button" id="iz-c" class="izc">Hapus</button></div><small>User · tanda tangan di kotak</small></div></div></div>
+      <div class="err" id="iz-e" role="alert"></div>
+      <button class="btn" type="submit">${ic('check', 18)}Submit</button></form><div id="izres"></div>`;
+  const cv = $('#iz-s'), fit = () => { const r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; if (cv._w !== r.width) { cv._w = r.width; cv.width = r.width * k; cv.height = r.height * k; cv.getContext('2d').scale(k, k); cv.dirty = false; } };
+  fit(); const g = cv.getContext('2d'); g.lineWidth = 2.2; g.lineCap = g.lineJoin = 'round'; g.strokeStyle = '#0b1c30'; let dr = false;
+  const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.onpointerdown = e => { dr = true; cv.setPointerCapture(e.pointerId); g.beginPath(); const [x, y] = pt(e); g.moveTo(x, y); g.lineTo(x + .1, y + .1); g.stroke(); cv.dirty = true; e.preventDefault(); };
+  cv.onpointermove = e => { if (!dr) return; const [x, y] = pt(e); g.lineTo(x, y); g.stroke(); };
+  cv.onpointerup = cv.onpointercancel = () => { dr = false; };
+  $('#iz-c').onclick = () => { g.clearRect(0, 0, cv.width, cv.height); cv.dirty = false; };
+  const tick = () => { const w = $('#iz-w'); if (!w || tab !== 'izin') { clearInterval(izT); izT = null; return; } if (!izOut) w.value = izDT(new Date()); };
+  tick(); clearInterval(izT); izT = setInterval(tick, 1000);
+  $('#izform').onsubmit = async e => {
+    e.preventDefault(); const err = $('#iz-e'), tp = $('#iz-t').value, rs = $('#iz-r').value.replace(/\s+/g, ' ').trim();
+    if (!tp) { err.textContent = 'Pilih tipe izin pulang.'; return $('#iz-t').focus(); }
+    if (rs.length < 3) { err.textContent = 'Alasan pulang wajib diisi.'; return $('#iz-r').focus(); }
+    err.textContent = ''; const now = new Date(); izOut = { name: u.name || '', div: u.title || '', tipe: tp, alasan: rs, dt: izDT(now), sig: cv.dirty ? cv : null };
+    const btn = e.submitter; if (btn) btn.disabled = true;
+    try { const c = await drawIzin(izOut); izOut.url = c.toDataURL('image/jpeg', .93); } catch { err.textContent = 'Gagal membuat gambar.'; izOut = null; if (btn) btn.disabled = false; return; }
+    $('#izform').hidden = true; 
+    $('#izres').innerHTML = `<div class="card izr"><div class="sec" style="margin:0 0 10px"><h3 class="h" style="font-size:15px">Izin pulang terkirim</h3><span class="aktif">Selesai</span></div>
+      <img class="izimg" src="${izOut.url}" alt="Form izin pulang ${esc(izOut.name)}">
+      <div class="izact"><button class="btn" id="iz-dl">${ic('copy', 18)}Simpan JPG</button><button class="btn sec2" id="iz-pr">${ic('doc', 18)}Cetak</button></div>
+      <button class="btn sec2" id="iz-new" style="margin-top:10px">${ic('plus', 18)}Buat Izin Baru</button></div>`;
+    $('#iz-dl').onclick = () => { const a = document.createElement('a'); a.href = izOut.url; a.download = `Izin-Pulang_${izOut.name.replace(/\s+/g, '-')}_${new Date().toISOString().slice(0, 10)}.jpg`; document.body.appendChild(a); a.click(); a.remove(); };
+    $('#iz-pr').onclick = () => { let p = $('#izprint'); if (!p) { p = document.createElement('div'); p.id = 'izprint'; document.body.appendChild(p); } p.innerHTML = `<img src="${izOut.url}" alt="">`; const im = p.querySelector('img'); (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => window.print()); };
+    $('#iz-new').onclick = () => renderIzin(true);
+    $('#izres').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+function izWrap(g, text, maxW) { const out = []; let line = ''; for (const w of String(text).split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width <= maxW || !line) line = t; else { out.push(line); line = w; } } if (line) out.push(line); return out; }
+async function drawIzin(o) {
+  try { await Promise.all(['400', '600', '700'].map(w => document.fonts.load(`${w} 30px "Plus Jakarta Sans"`))); } catch {}
+  const logo = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = '/logo.jpg'; });
+  const W = 1000, M = 72, F = '"Plus Jakarta Sans", system-ui, sans-serif', c = document.createElement('canvas'), g0 = c.getContext('2d');
+  g0.font = `500 32px ${F}`; const LW = 300, VW = W - M * 2 - LW - 24, rows = [['Nama', o.name], ['Divisi', o.div], ['Tipe Izin Pulang', o.tipe], ['Alasan Pulang', o.alasan], ['Tanggal dan Jam Pulang', o.dt]].map(([l, v]) => [l, izWrap(g0, v, VW)]);
+  g0.font = `700 28px ${F}`; rows.forEach(r => { r[2] = izWrap(g0, r[0], LW); });
+  const rowH = r => Math.max(r[1].length, r[2].length) * 46 + 26, tableH = rows.reduce((a, r) => a + rowH(r), 0), top = 250, sigTop = top + tableH + 70, H = sigTop + 460;
+  c.width = W; c.height = H; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#0D429D'; g.fillRect(0, 0, W, 14);
+  if (logo) g.drawImage(logo, M, 52, 84, 84);
+  g.textBaseline = 'alphabetic'; g.fillStyle = '#0b1c30'; g.font = `700 30px ${F}`; g.fillText('Hub Karyawan', M + (logo ? 104 : 0), 92); g.font = `500 22px ${F}`; g.fillStyle = '#44505f'; g.fillText('Formulir Pengajuan', M + (logo ? 104 : 0), 126);
+  g.textAlign = 'center'; g.fillStyle = '#0D429D'; g.font = `800 48px ${F}`; g.fillText('FORM IZIN PULANG', W / 2, 210); g.textAlign = 'left';
+  g.strokeStyle = '#cbd5e1'; g.lineWidth = 2; g.beginPath(); g.moveTo(M, 236); g.lineTo(W - M, 236); g.stroke();
+  let y = top;
+  rows.forEach(r => {
+    const h = rowH(r); g.fillStyle = '#334155'; g.font = `700 28px ${F}`; r[2].forEach((t, i) => g.fillText(t, M, y + 40 + i * 46)); g.fillText(':', M + LW, y + 40);
+    g.fillStyle = '#0b1c30'; g.font = `500 32px ${F}`; r[1].forEach((t, i) => g.fillText(t, M + LW + 24, y + 40 + i * 46));
+    g.strokeStyle = '#e2e8f0'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(M, y + h); g.lineTo(W - M, y + h); g.stroke(); y += h;
+  });
+  g.fillStyle = '#0b1c30'; g.font = `700 32px ${F}`; g.fillText('Mengetahui,', M, sigTop);
+  const bw = 380, bx = [M, W - M - bw], by = sigTop + 64, bh = 190;
+  [['HRD', null, '(............................)'], ['User', o.sig, `( ${o.name} )`]].forEach(([lb, sig, nm], i) => {
+    const x = bx[i]; g.textAlign = 'center'; g.fillStyle = '#334155'; g.font = `700 28px ${F}`; g.fillText(lb, x + bw / 2, by + 6);
+    g.strokeStyle = '#94a3b8'; g.lineWidth = 2; g.setLineDash([8, 6]); g.strokeRect(x, by + 22, bw, bh); g.setLineDash([]);
+    if (sig) { const k = Math.min((bw - 20) / sig.width, (bh - 20) / sig.height); g.drawImage(sig, x + (bw - sig.width * k) / 2, by + 22 + (bh - sig.height * k) / 2, sig.width * k, sig.height * k); }
+    g.fillStyle = '#0b1c30'; g.font = `600 26px ${F}`; g.fillText(nm.length > 30 ? nm.slice(0, 29) + '…)' : nm, x + bw / 2, by + bh + 70); g.textAlign = 'left';
+  });
+  g.fillStyle = '#64748b'; g.font = `400 20px ${F}`; g.textAlign = 'center'; g.fillText(`Dibuat melalui Hub Karyawan · ${o.dt}`, W / 2, H - 28); g.textAlign = 'left';
+  return c;
 }
 function renderCuti() { $('#main').innerHTML = cutiHTML(); }
 function cutiHTML() {
