@@ -205,3 +205,7 @@ nav.noanim,nav.noanim *{transition:none!important}
 .izr .izimg{display:block;width:100%;border-radius:10px;border:1px solid var(--line);box-shadow:var(--sh1)}.izact{display:flex;gap:10px;margin-top:12px}.izact .btn{flex:1;margin:0}
 #izprint{display:none}
 @media print{body>*:not(#izprint){display:none!important}#izprint{display:block!important}#izprint img{display:block;width:100%;max-width:190mm;margin:0 auto}@page{margin:10mm}}
+
+.izbn{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:#fef3c7;color:#92400e;font:500 12px/18px var(--ff)}.izbn svg{flex:none;margin-top:1px}
+
+.mda.col{flex-direction:column}.mda.col .btn{flex:none;width:100%;min-height:48px}
