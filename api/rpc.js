@@ -54,7 +54,7 @@ async function snapshot(uid, session, ctx, viaPin) {
     q("SELECT COALESCE((SELECT (v #>> '{}')::int FROM kv WHERE k = 'ver'), 0) AS n"),
     q("SELECT v FROM kv WHERE k = 'att_meta'"),
     q('SELECT d, aktual, status, kind, mins FROM attendance WHERE uid = $1 ORDER BY d DESC', [uid]),
-    q('SELECT d, ts, out_ts FROM checkins WHERE uid = $1 ORDER BY d DESC', [uid]),
+    q('SELECT d, ts, out_ts, iz_tipe, iz_alasan FROM checkins WHERE uid = $1 ORDER BY d DESC', [uid]),
   ]);
   const seen = Object.fromEntries(pr.rows.map(r => [r.uid, Number(r.ts)])), msgs = { all: [] }, peer = {}, reads = {};
   for (const r of m.rows) (msgs[r.conv] = msgs[r.conv] || []).push(msgOut(r));
@@ -63,10 +63,10 @@ async function snapshot(uid, session, ctx, viaPin) {
   const users = Object.values(db.users).map(x => ({ id: x.id, name: x.name, title: x.title, online: (seen[x.id] || 0) > t - 15000, lastSeen: seen[x.id] || 0 }));
   const maxId = m.rows.reduce((a, r) => Math.max(a, Number(r.id)), 0);
   const att = am.rows[0] ? { has: true, ...am.rows[0].v, rows: ar.rows.map(r => ({ d: r.d, a: r.aktual, s: r.status, k: L.applyGrace(r.kind, r.mins, r.status, r.aktual), m: r.mins })) } : { has: false };
-  const crow = ck.rows.map(r => L.checkinRow(Number(r.ts), r.out_ts && Number(r.out_ts))), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
+  const crow = ck.rows.map(r => L.checkinRow(Number(r.ts), r.out_ts && Number(r.out_ts), { tipe: r.iz_tipe, alasan: r.iz_alasan })), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
   const chk = crow.length ? { has: true, file: 'Check-in GPS', total: crow.length, people: 1, from: cd[0], to: cd[cd.length - 1], updatedAt: Math.max(...ck.rows.map(r => Number(r.ts))), by: 'Check-in GPS', rows: crow } : { has: false };
   const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
-  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, helper: !!u.helper, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts)) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, helper: !!u.helper, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts), { tipe: tc.iz_tipe, alasan: tc.iz_alasan }) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -155,13 +155,18 @@ async function route(d, ip, ctx) {
       const dist = L.distM(lat, lng, O.lat, O.lng);
       if (dist > O.r) return E(`Kamu berada ${Math.round(dist)} m dari lokasi kantor (maksimal ${O.r} m).`);
       if (out) {
-        const w = L.wib(t), cur = (await q('SELECT ts, out_ts FROM checkins WHERE uid = $1 AND d = $2', [uid, w.d])).rows[0];
+        const w = L.wib(t), cur = (await q('SELECT ts, out_ts, iz_tipe, iz_alasan FROM checkins WHERE uid = $1 AND d = $2', [uid, w.d])).rows[0];
         if (!cur) return E('Kamu belum check in hari ini.');
         const ts = Number(cur.ts);
-        if (cur.out_ts) return { type: 'checkout_ok', ci: { d: w.d, ts, out: Number(cur.out_ts), row: L.checkinRow(ts, Number(cur.out_ts)) }, already: true };
-        if (w.hm < '16:00' && !d.confirm) return { type: 'checkout_confirm', hm: w.hm }; // belum jam pulang kerja: minta persetujuan user
-        await q('UPDATE checkins SET out_ts = $3, out_lat = $4, out_lng = $5, out_dev = $6 WHERE uid = $1 AND d = $2 AND out_ts IS NULL', [uid, w.d, t, lat, lng, ctx.dh.slice(0, 12)]);
-        return { type: 'checkout_ok', ci: { d: w.d, ts, out: t, row: L.checkinRow(ts, t) } };
+        if (cur.out_ts) return { type: 'checkout_ok', ci: { d: w.d, ts, out: Number(cur.out_ts), row: L.checkinRow(ts, Number(cur.out_ts), { tipe: cur.iz_tipe, alasan: cur.iz_alasan }) }, already: true };
+        let iz = null;
+        if (w.hm < '16:00') { // belum jam pulang kerja: check out hanya bisa lewat pengajuan izin pulang
+          const tipe = String((d.izin || {}).tipe || ''), alasan = L.clean((d.izin || {}).alasan, 300).replace(/\s+/g, ' ');
+          if (!L.IZIN_TIPE.includes(tipe) || alasan.length < 3) return { type: 'checkout_confirm', hm: w.hm };
+          iz = { tipe, alasan };
+        }
+        await q('UPDATE checkins SET out_ts = $3, out_lat = $4, out_lng = $5, out_dev = $6, iz_tipe = $7, iz_alasan = $8 WHERE uid = $1 AND d = $2 AND out_ts IS NULL', [uid, w.d, t, lat, lng, ctx.dh.slice(0, 12), iz && iz.tipe, iz && iz.alasan]);
+        return { type: 'checkout_ok', ci: { d: w.d, ts, out: t, row: L.checkinRow(ts, t, iz) } };
       }
       const day = L.wib(t).d, ins = await q('INSERT INTO checkins (uid, d, ts, lat, lng, acc, dev) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING RETURNING ts', [uid, day, t, lat, lng, isFinite(acc) ? acc : null, ctx.dh.slice(0, 12)]);
       const ts = ins.rows[0] ? t : Number((await q('SELECT ts FROM checkins WHERE uid = $1 AND d = $2', [uid, day])).rows[0].ts);
