@@ -142,7 +142,7 @@ function render() {
   if (!me) return;
   ss.set('hub-tab', tab);
   const u = users.get(me), n = totalUnread();
-  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'izin') delete $('#main').dataset.iz; if (tab !== 'home') stopGeo();
+  $('#title').textContent = TITLES[tab]; $('#main').classList.remove('nw'); if (tab !== 'news') delete $('#main').dataset.nk; if (tab !== 'izin') delete $('#main').dataset.iz; if (tab !== 'izin') izPend = false; if (tab !== 'home' && !izPend) stopGeo();
   $('#meBtn').innerHTML = av(u, 's');
   $('#bell').innerHTML = ic('bell') + (n ? '<span class="dot"></span>' : '');
   document.title = (n ? `(${n}) ` : '') + 'Hub Karyawan';
@@ -258,16 +258,16 @@ function doGo(confirm) {
   hcBusy = true; hcMsg = ''; updHc();
   send({ type: ci ? 'checkout' : 'checkin', lat: geo.lat, lng: geo.lng, acc: geo.acc, confirm: !!confirm }).then(r => { if (!r) { hcBusy = false; hcMsg = 'Gagal terhubung ke server. Coba lagi.'; updHc(); } });
 }
-function askEarlyOut(hm) { // peringatan check out sebelum jam pulang kerja (16.00)
+function askEarlyOut(hm) { // peringatan check out sebelum jam pulang kerja (16.00): wajib mengajukan izin pulang
   let m = $('#early'); if (m) m.remove();
   m = document.createElement('div'); m.id = 'early'; m.className = 'mdl';
   m.innerHTML = `<div class="mdb" role="alertdialog" aria-modal="true" aria-labelledby="eh"><div class="mdi">${ic('clock', 26)}</div><h3 id="eh">Belum Jam Pulang Kerja</h3>
-    <p>Sekarang pukul <b>${esc(hm.replace(':', '.'))} WIB</b>. Jam pulang kerja adalah pukul <b>16.00</b>. Jika check out sekarang, kamu dicatat <b>pulang awal</b>.</p><p class="mq">Apakah kamu yakin ingin check out?</p>
-    <div class="mda"><button type="button" class="btn sec2" data-n>Tidak</button><button type="button" class="btn" data-y>Ya</button></div></div>`;
+    <p>Sekarang pukul <b>${esc(hm.replace(':', '.'))} WIB</b>. Jam pulang kerja adalah pukul <b>16.00</b>.</p><p class="mq">Untuk check out lebih awal, ajukan izin pulang terlebih dahulu.</p>
+    <div class="mda col"><button type="button" class="btn" data-y>${ic('doc', 18)}Ajukan Izin Pulang</button><button type="button" class="btn sec2" data-n>Tutup</button></div></div>`;
   const close = () => { m.remove(); document.removeEventListener('keydown', esc_); }, esc_ = e => { if (e.key === 'Escape') close(); };
   m.querySelector('[data-n]').onclick = close; m.onclick = e => { if (e.target === m) close(); };
-  m.querySelector('[data-y]').onclick = () => { close(); doGo(true); };
-  document.addEventListener('keydown', esc_); document.body.appendChild(m); m.querySelector('[data-n]').focus();
+  m.querySelector('[data-y]').onclick = () => { close(); izPend = true; tab = 'izin'; render(); $('#main').scrollTop = 0; };
+  document.addEventListener('keydown', esc_); document.body.appendChild(m); m.querySelector('[data-y]').focus();
 }
 function initMap() {
   if (hcMap || !hc.isConnected || !hq('.hm').offsetWidth) return;
@@ -309,7 +309,7 @@ function updHc() {
 function mountCard() {
   if (!hc) buildCard();
   const slot = $('#hcslot'); slot.replaceWith(hc);
-  startGeo(); clearInterval(hcT); hcT = setInterval(() => { if (!hc.isConnected) return stopGeo(); updHc(); }, 1000);
+  startGeo(); clearInterval(hcT); hcT = setInterval(() => { if (!hc.isConnected) { if (!izPend) stopGeo(); return; } updHc(); }, 1000);
   updHc(); initMap(); if (hcMap) updMap();
 }
 function renderHome() {
@@ -433,7 +433,7 @@ function homeMenu() {
 }
 // ---------- Form Izin Pulang ----------
 const IZIN_TIPE = ['Sakit', 'Orang Tua / Saudara Meninggal', 'Menjalani Pengobatan', 'Mengantar Anak', 'Mengantar Orang Tua / Saudara', 'Lain-lain'];
-let izT = null, izOut = null;
+let izT = null, izOut = null, izPend = false; // izPend: form izin dibuka dari Check Out sebelum jam 16.00 (submit = izin + check out)
 function izDT(d) {
   const off = -d.getTimezoneOffset() / 60, z = { 7: 'WIB', 8: 'WITA', 9: 'WIT' }[off] || 'GMT' + (off >= 0 ? '+' : '') + off, p2 = n => String(n).padStart(2, '0');
   return `${d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${p2(d.getHours())}.${p2(d.getMinutes())} ${z}`;
@@ -441,7 +441,7 @@ function izDT(d) {
 function renderIzin(force) {
   const m = $('#main'); if (!force && m.dataset.iz === '1' && m.firstChild) return; // render ulang oleh pesan baru tidak boleh menghapus isian form
   m.dataset.iz = '1'; izOut = null; const u = users.get(me) || {}, pi = $('#izprint'); if (pi) pi.remove();
-  m.innerHTML = `<div class="sec" style="margin:8px 0 10px"><div><h3 class="h">Form Izin Pulang</h3><small style="color:var(--ink2)">Isi form, lalu simpan sebagai gambar atau cetak.</small></div></div>
+  m.innerHTML = `<div class="sec" style="margin:8px 0 10px"><div><h3 class="h">Form Izin Pulang</h3><small style="color:var(--ink2)">Isi form, lalu simpan sebagai gambar atau cetak.</small></div></div>${izPend ? `<div class="izbn">${ic('clock', 18)}<span>Kamu check out sebelum jam 16.00. Submit form ini akan <b>sekaligus mencatat Check Out</b> dan keterangan izin pulang awal di Absensi.</span></div>` : ''}
     <form class="card izf" id="izform" novalidate>
       <label class="fld"><span>Nama</span><input id="iz-n" value="${esc(u.name || '')}" readonly></label>
       <label class="fld"><span>Divisi</span><input id="iz-d" value="${esc(u.title || '')}" readonly></label>
@@ -452,7 +452,7 @@ function renderIzin(force) {
         <div class="izs"><div><div class="izb izb-e"></div><small>HRD</small></div>
         <div><div class="izb"><canvas id="iz-s" aria-label="Tanda tangan user"></canvas><button type="button" id="iz-c" class="izc">Hapus</button></div><small>User · tanda tangan di kotak</small></div></div></div>
       <div class="err" id="iz-e" role="alert"></div>
-      <button class="btn" type="submit">${ic('check', 18)}Submit</button></form><div id="izres"></div>`;
+      <button class="btn" type="submit">${ic('check', 18)}${izPend ? 'Submit & Check Out' : 'Submit'}</button></form><div id="izres"></div>`;
   const cv = $('#iz-s'), fit = () => { const r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; if (cv._w !== r.width) { cv._w = r.width; cv.width = r.width * k; cv.height = r.height * k; cv.getContext('2d').scale(k, k); cv.dirty = false; } };
   fit(); const g = cv.getContext('2d'); g.lineWidth = 2.2; g.lineCap = g.lineJoin = 'round'; g.strokeStyle = '#0b1c30'; let dr = false;
   const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
@@ -466,11 +466,18 @@ function renderIzin(force) {
     e.preventDefault(); const err = $('#iz-e'), tp = $('#iz-t').value, rs = $('#iz-r').value.replace(/\s+/g, ' ').trim();
     if (!tp) { err.textContent = 'Pilih tipe izin pulang.'; return $('#iz-t').focus(); }
     if (rs.length < 3) { err.textContent = 'Alasan pulang wajib diisi.'; return $('#iz-r').focus(); }
-    err.textContent = ''; const now = new Date(); izOut = { name: u.name || '', div: u.title || '', tipe: tp, alasan: rs, dt: izDT(now), sig: cv.dirty ? cv : null };
-    const btn = e.submitter; if (btn) btn.disabled = true;
+    err.textContent = ''; const now = new Date(), btn = e.submitter;
+    if (izPend && !geoInside()) { err.textContent = geo.st === 'ok' ? `Check Out hanya bisa dari area kantor (maksimal ${office.r} m). Posisimu saat ini di luar area.` : 'Lokasi belum terdeteksi. Aktifkan GPS lalu coba lagi.'; return; }
+    izOut = { name: u.name || '', div: u.title || '', tipe: tp, alasan: rs, dt: izDT(now), sig: cv.dirty ? cv : null, co: izPend };
+    if (btn) btn.disabled = true;
+    if (izPend) { // check out dicatat bersama izin pulang awal
+      const r = await send({ type: 'checkout', lat: geo.lat, lng: geo.lng, acc: geo.acc, izin: { tipe: tp, alasan: rs } });
+      if (!r || r.type !== 'checkout_ok') { err.textContent = !r ? 'Gagal terhubung ke server. Coba lagi.' : r.type === 'checkout_confirm' ? 'Check Out belum dapat dicatat. Coba lagi.' : (r.msg || 'Check Out gagal.'); izOut = null; if (btn) btn.disabled = false; return; }
+      izPend = false; hcMsg = '';
+    }
     try { const c = await drawIzin(izOut); izOut.url = c.toDataURL('image/jpeg', .93); } catch { err.textContent = 'Gagal membuat gambar.'; izOut = null; if (btn) btn.disabled = false; return; }
     $('#izform').hidden = true; 
-    $('#izres').innerHTML = `<div class="card izr"><div class="sec" style="margin:0 0 10px"><h3 class="h" style="font-size:15px">Izin pulang terkirim</h3><span class="aktif">Selesai</span></div>
+    $('#izres').innerHTML = `<div class="card izr"><div class="sec" style="margin:0 0 10px"><h3 class="h" style="font-size:15px">${izOut.co ? 'Check Out &amp; izin pulang tercatat' : 'Izin pulang terkirim'}</h3><span class="aktif">Selesai</span></div>
       <img class="izimg" src="${izOut.url}" alt="Form izin pulang ${esc(izOut.name)}">
       <div class="izact"><button class="btn" id="iz-dl">${ic('copy', 18)}Simpan JPG</button><button class="btn sec2" id="iz-pr">${ic('doc', 18)}Cetak</button></div>
       <button class="btn sec2" id="iz-new" style="margin-top:10px">${ic('plus', 18)}Buat Izin Baru</button></div>`;
@@ -558,6 +565,7 @@ const KORDER = Object.keys(KINDS);
 const fmtLong = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); };
 const monthLbl = mo => new Date(+mo.slice(0, 4), +mo.slice(5, 7) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 const KET = r => { // keterangan detail: dalam toleransi (<=15 menit) bukan terlambat; pulang sebelum 16.00 = pulang awal
+  if (r.iz) return r.s; // izin pulang awal dari form: keterangan sudah lengkap
   let t = r.s;
   if (r.k !== 'telat' && /terlambat/i.test(t)) t = t.replace(/(datang\s+)?terlambat/i, 'Toleransi').replace(r.m > 15 ? /\s*\d+\s*menit/i : /$^/, '');
   const o = String(r.a || '').match(/-\s*(\d{1,2})[.:](\d{2})\s*$/), early = o && +o[1] * 60 + +o[2] < 960;
