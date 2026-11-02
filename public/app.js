@@ -395,15 +395,15 @@ function paintTyping() {
 const LGX_TOP = `<div class="lgx-top"><div class="lgc"><img src="/logo-mark.png" alt="Mjs Group"></div><b>Mjs Group</b>
   <svg viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 38C40 18 70 24 105 30S170 14 215 22s80-10 110-6 55 8 75 2V70H0z" fill="#fff" opacity=".28"/><path d="M0 48C50 30 90 40 135 44s90-22 140-16 85 14 125 4V70H0z" fill="#fff" opacity=".5"/><path d="M0 56C60 46 110 56 170 56s120-16 170-10 40 4 60 2V70H0z" fill="#fff"/></svg></div>`;
 const eyeBtn = `<button type="button" class="eye" aria-label="Tampilkan PIN">${ic('eye', 20)}</button>`;
-function eyeBind(root) { root.querySelectorAll('.eye').forEach(b => b.onclick = () => { const i = b.previousElementSibling, t = i.type === 'password'; root.querySelectorAll('.pw input').forEach(x => x.type = t ? 'text' : 'password'); }); }
+function eyeBind(root) { root.querySelectorAll('.eye').forEach(b => b.onclick = () => { const show = !root.querySelector('.pw input').classList.contains('show'); root.querySelectorAll('.pw input').forEach(x => x.classList.toggle('show', show)); }); }
 function showLogin() {
   const el = $('#login'); el.hidden = false; forcePin = false; pinSet = false; lastPin = ''; el.classList.toggle('live', !splashOn);
   const lu = lastUser(), back = !!(lu && lu.name), sel = back ? lu : null, nm = n => { const w = n.trim().split(/\s+/); return w.slice(0, 2).join(' '); };
   el.innerHTML = `<div class="lgx">${LGX_TOP}<form class="lgx-f" id="pf" autocomplete="off">
     <h2>${back ? 'Halo, ' + esc(nm(sel.name)) : 'Masuk ke Akun Anda'}</h2>
     <p class="lgx-s">${back ? 'Masukkan PIN untuk melanjutkan.' : 'Pertama kali masuk? Ketik nama lengkapmu, lalu pakai PIN awal dari admin. Kamu akan diminta membuat PIN baru.'}</p>
-    <label class="lf"><span>Nama (Username)</span><input id="un" name="fld-${Math.random().toString(36).slice(2, 8)}" type="text" placeholder="Ketik nama lengkap sesuai data karyawan" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" readonly data-lpignore="true" data-1p-ignore="true" data-form-type="other" value="${back ? esc(sel.name) : ''}"></label>
-    <label class="lf"><span>PIN</span><div class="pw"><input id="pn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Masukkan PIN 6 angka" name="pin-${Math.random().toString(36).slice(2, 8)}" autocomplete="one-time-code" data-lpignore="true" data-1p-ignore="true">${eyeBtn}</div></label>
+    <label class="lf"><span>Nama Lengkap</span><input id="un" name="fld-${Math.random().toString(36).slice(2, 8)}" type="text" placeholder="Ketik nama lengkap sesuai data karyawan" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" readonly data-lpignore="true" data-1p-ignore="true" data-form-type="other" value="${back ? esc(sel.name) : ''}"></label>
+    <label class="lf"><span>PIN</span><div class="pw"><input id="pn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Masukkan PIN 6 angka" name="pin-${Math.random().toString(36).slice(2, 8)}" autocomplete="one-time-code" data-lpignore="true" data-1p-ignore="true">${eyeBtn}</div></label>
     <div class="err" id="lerr" role="alert"></div>
     <div class="lgx-btns"><button class="pill-b" id="go" type="submit">Masuk</button>${back ? '<button class="pill-o" id="chg" type="button">Ganti Akun</button>' : ''}</div></form></div>`;
   eyeBind(el);
@@ -425,7 +425,7 @@ function loginErr(m, keep) { const e = $('#lerr'); if (e) e.textContent = m || '
 // Login pertama (masih PIN bawaan): wajib membuat PIN baru sebelum memakai aplikasi
 function showSetPin() {
   forcePin = true; const el = $('#login'); el.hidden = false; el.classList.add('live');
-  const needOld = !lastPin, fld = (l, ac) => `<label class="lf"><span>${l}</span><div class="pw"><input class="pi" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6 angka" autocomplete="${ac}">${eyeBtn}</div></label>`;
+  const needOld = !lastPin, fld = (l, ac) => `<label class="lf"><span>${l}</span><div class="pw"><input class="pi" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6 angka" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">${eyeBtn}</div></label>`;
   el.innerHTML = `<div class="lgx">${LGX_TOP}<form class="lgx-f" id="pnf" autocomplete="off">
     <h2>Buat PIN Baru</h2>
     <p class="lgx-s">Ini login pertamamu. Demi keamanan, ganti PIN bawaan dengan PIN pilihanmu sendiri sebelum melanjutkan.</p>
