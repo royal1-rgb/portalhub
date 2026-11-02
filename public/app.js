@@ -15,9 +15,9 @@ let lastPin = '', forcePin = false, pinSet = false, splashOn = true;
 const splashMin = new Promise(r => setTimeout(r, 2000));
 function hideSplash() {
   if (!splashOn) return; splashOn = false;
-  splashMin.then(() => {  = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
+  splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
 }
-astUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
+const lastUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
 let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
@@ -30,7 +30,7 @@ const ini = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpp
 const av = (u, cls = '', dot = false) => { const [b, f] = COL[parseInt(u.id.slice(0, 4), 16) % COL.length]; return `<div class="av ${cls}" style="background:${b};color:${f}">${esc(ini(u.name))}${dot && u.online ? '<i></i>' : ''}</div>`; };
 const unread = c => (msgs[c] || []).filter(m => m.id > (reads[c] || 0) && m.from !== me).length;
 const totalUnread = () => Object.keys(msgs).reduce((s, c) => s + unread(c), 0);
-ast = c => (msgs[c] || []).slice(-1)[0];
+const last = c => (msgs[c] || []).slice(-1)[0];
 const dmId = id => 'd:' + [me, id].sort().join(':');
 const convIds = () => ['all', ...Object.keys(msgs).filter(c => c.startsWith('d:'))];
 const meta = c => {
@@ -137,13 +137,22 @@ function paintOff() {
 const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', izin: 'Izin Pulang', news: 'News Update', me: 'Profil Karyawan' };
 const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
 // ---------- Liquid Floating Bar: blob cair (metaball) dengan fisika pegas ----------
+// Rasa gerakan menu: ganti LQ_FEEL dengan 'standar' | 'santai' | 'jelly'
+// Tiap pasangan [kekakuan, peredaman]: kekakuan besar = cepat; peredaman kecil = kenyal (melampaui tujuan lalu bergoyang)
+const LQ_FEEL = 'jelly';
+const LQ_PRESET = {
+  standar: { L: [200, 18], T: [56, 13], F: [[140, 16], [100, 13], [70, 11]], C: [110, 20], goo: 7, sx: .3, sy: .22 },
+  santai: { L: [140, 12], T: [40, 10], F: [[100, 12], [72, 10], [50, 8]], C: [85, 12], goo: 7, sx: .3, sy: .22 },
+  jelly: { L: [120, 9], T: [34, 7.5], F: [[86, 9.5], [62, 8], [44, 6.5]], C: [72, 8], goo: 8.5, sx: .42, sy: .32 }
+};
 function lqBuild(nav) {
+  const P = LQ_PRESET[LQ_FEEL] || LQ_PRESET.standar;
   const NS = 'http://www.w3.org/2000/svg', wrap = nav.querySelector('.lqw'), n = NAV.length;
   const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'lq-svg'); svg.setAttribute('aria-hidden', 'true');
   svg.innerHTML = `<defs>
     <linearGradient id="lqg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="360" y2="0"><stop offset="0" stop-color="#0D429D"/><stop offset=".5" stop-color="#1f62e8"/><stop offset="1" stop-color="#6d3fd8"/></linearGradient>
     <filter id="lqf" filterUnits="userSpaceOnUse" x="-30" y="-30" width="420" height="160" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="${P.goo}" result="b"/>
       <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="g"/>
       <feGaussianBlur in="g" stdDeviation=".7"/>
     </filter></defs>
@@ -155,21 +164,21 @@ function lqBuild(nav) {
   wrap.insertBefore(svg, wrap.firstChild);
   const el = k => svg.querySelector(`[data-o="${k}"]`), btns = [...wrap.querySelectorAll('button')];
   const mk = (k, kk, c) => ({ x: 0, v: 0, k: kk, c, e: el(k) });
-  const L = mk('L', 200, 18), T = mk('T', 56, 13), F = [mk('F1', 140, 16), mk('F2', 100, 13), mk('F3', 70, 11)], C = mk('C', 110, 20);
+  const L = mk('L', ...P.L), T = mk('T', ...P.T), F = P.F.map((f, i) => mk('F' + (i + 1), ...f)), C = mk('C', ...P.C);
   const RIM = el('rim'), sp = [L, T, ...F, C], RX = 31, RY = 28, Y0 = 18 + 32;
   const S = { W: 0, slot: 0, cx: [], target: 0, raf: 0, last: 0 };
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const set = (e, cx, cy, rx, ry) => { e.setAttribute('cx', cx.toFixed(2)); e.setAttribute('cy', cy.toFixed(2)); e.setAttribute('rx', Math.max(0, rx).toFixed(2)); e.setAttribute('ry', Math.max(0, ry).toFixed(2)); };
   const draw = () => {
-    const slot = S.slot || 1, dTL = Math.abs(L.x - T.x), s = Math.min(1, dTL / (slot * .9)), sp0 = Math.abs(L.v);
-    const sx = 1 + Math.min(.3, sp0 / (slot * 11)), sy = 1 + Math.min(.22, sp0 / (slot * 16)) + .18 * s;
-    set(L.e, L.x, Y0, RX * sx, RY * sy); set(RIM, L.x + 3, Y0 + 5.5, RX * sx * .88, RY * sy * .9);
-    const rT = 1 - .55 * s; set(T.e, T.x, Y0, RX * rT, RY * rT);
+    const lim = (x, rx = RX) => Math.max(rx - 4, Math.min(S.W - rx + 4, x)), slot = S.slot || 1, dTL = Math.abs(L.x - T.x), s = Math.min(1, dTL / (slot * .9)), sp0 = Math.abs(L.v);
+    const sx = 1 + Math.min(P.sx, sp0 / (slot * 11)), sy = 1 + Math.min(P.sy, sp0 / (slot * 16)) + .18 * s;
+    set(L.e, lim(L.x, RX * sx), Y0, RX * sx, RY * sy); set(RIM, lim(L.x, RX * sx) + 3, Y0 + 5.5, RX * sx * .88, RY * sy * .9);
+    const rT = 1 - .55 * s; set(T.e, lim(T.x, RX * rT), Y0, RX * rT, RY * rT);
     const g = Math.min(1, dTL / (slot * .6)), fr = [.55, .42, .3];
-    F.forEach((f, i) => set(f.e, f.x, Y0 + (i - 1) * 2, RX * fr[i] * g, RY * fr[i] * g));
+    F.forEach((f, i) => set(f.e, lim(f.x, RX * fr[i] * g), Y0 + (i - 1) * 2, RX * fr[i] * g, RY * fr[i] * g));
     const bob = Math.min(8, Math.abs(C.v) / (slot * 3.2));
     set(C.e, Math.min(C.x + 13, S.W - 26), Y0 - 25 - bob * .6, 11.5 + bob * .4, 10.5 + bob * .8);
-    btns.forEach((b, i) => b.style.setProperty('--k', Math.max(0, Math.min(1, 1.3 - Math.abs(L.x - S.cx[i]) / (slot * .5))).toFixed(3)));
+    btns.forEach((b, i) => b.style.setProperty('--k', Math.max(0, Math.min(1, 1.3 - Math.abs(L.x - S.cx[i]) / (slot * .75))).toFixed(3)));
   };
   const snap = () => { const t = S.cx[S.target] || 0; sp.forEach(o => { o.x = t; o.v = 0; }); draw(); };
   const frame = now => {
