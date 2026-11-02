@@ -155,7 +155,7 @@ function lqBuild(nav) {
   wrap.insertBefore(svg, wrap.firstChild);
   const el = k => svg.querySelector(`[data-o="${k}"]`), btns = [...wrap.querySelectorAll('button')];
   const mk = (k, kk, c) => ({ x: 0, v: 0, k: kk, c, e: el(k) });
-  const L = mk('L', 150, 13), T = mk('T', 42, 9), F = [mk('F1', 105, 13), mk('F2', 75, 11), mk('F3', 52, 9)], C = mk('C', 90, 14);
+  const L = mk('L', 200, 18), T = mk('T', 56, 13), F = [mk('F1', 140, 16), mk('F2', 100, 13), mk('F3', 70, 11)], C = mk('C', 110, 20);
   const RIM = el('rim'), sp = [L, T, ...F, C], RX = 31, RY = 28, Y0 = 18 + 32;
   const S = { W: 0, slot: 0, cx: [], target: 0, raf: 0, last: 0 };
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
