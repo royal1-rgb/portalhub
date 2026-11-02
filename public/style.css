@@ -261,3 +261,6 @@ nav.noanim,nav.noanim *{transition:none!important}
 #login.live .lgx-f>*{animation:spUp .55s both cubic-bezier(.2,.8,.2,1)}
 #login.live .lgx-f>*:nth-child(1){animation-delay:.3s}#login.live .lgx-f>*:nth-child(2){animation-delay:.36s}#login.live .lgx-f>*:nth-child(3){animation-delay:.42s}#login.live .lgx-f>*:nth-child(4){animation-delay:.48s}#login.live .lgx-f>*:nth-child(5){animation-delay:.54s}#login.live .lgx-f>*:nth-child(6){animation-delay:.6s}#login.live .lgx-f>*:nth-child(7){animation-delay:.66s}
 @media(prefers-reduced-motion:reduce){#splash *,#login *{animation-duration:.01s!important;animation-delay:0s!important}}
+
+/* PIN disamarkan lewat CSS (bukan type=password) agar browser tidak menawarkan akun tersimpan */
+.pw input{-webkit-text-security:disc;text-security:disc}.pw input.show{-webkit-text-security:none;text-security:none}
