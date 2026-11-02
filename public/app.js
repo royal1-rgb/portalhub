@@ -12,7 +12,7 @@ const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
 // Splash tampil minimal 2 detik, lalu halaman login (atau aplikasi bila sesi masih berlaku)
 let lastPin = '', forcePin = false, pinSet = false, splashOn = true;
-const splashMin = new Promise(r => setTimeout(r, 6000));
+const splashMin = new Promise(r => setTimeout(r, 5000));
 function hideSplash() {
   if (!splashOn) return; splashOn = false;
   splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
