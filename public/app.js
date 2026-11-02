@@ -17,7 +17,7 @@ function hideSplash() {
   if (!splashOn) return; splashOn = false;
   splashMin.then(() => {  = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
 }
-const lastUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
+astUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
 let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
 
 // ---------- util ----------
@@ -30,7 +30,7 @@ const ini = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpp
 const av = (u, cls = '', dot = false) => { const [b, f] = COL[parseInt(u.id.slice(0, 4), 16) % COL.length]; return `<div class="av ${cls}" style="background:${b};color:${f}">${esc(ini(u.name))}${dot && u.online ? '<i></i>' : ''}</div>`; };
 const unread = c => (msgs[c] || []).filter(m => m.id > (reads[c] || 0) && m.from !== me).length;
 const totalUnread = () => Object.keys(msgs).reduce((s, c) => s + unread(c), 0);
-const last = c => (msgs[c] || []).slice(-1)[0];
+ast = c => (msgs[c] || []).slice(-1)[0];
 const dmId = id => 'd:' + [me, id].sort().join(':');
 const convIds = () => ['all', ...Object.keys(msgs).filter(c => c.startsWith('d:'))];
 const meta = c => {
