@@ -15,7 +15,7 @@ let lastPin = '', forcePin = false, pinSet = false, splashOn = true;
 const splashMin = new Promise(r => setTimeout(r, 2000));
 function hideSplash() {
   if (!splashOn) return; splashOn = false;
-  splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
+  splashMin.then(() => {  = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
 }
 const lastUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
 let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
@@ -155,7 +155,7 @@ function lqBuild(nav) {
   wrap.insertBefore(svg, wrap.firstChild);
   const el = k => svg.querySelector(`[data-o="${k}"]`), btns = [...wrap.querySelectorAll('button')];
   const mk = (k, kk, c) => ({ x: 0, v: 0, k: kk, c, e: el(k) });
-  const L = mk('L', 100, 11), T = mk('T', 32, 5), F = [mk('F1', 85, 10), mk('F2', 60, 7), mk('F3', 40, 6)], C = mk('C', 75, 9);
+  const L = mk('L', 85, 9), T = mk('T', 28, 3), F = [mk('F1', 65, 8), mk('F2', 40, 6), mk('F3', 30, 3)], C = mk('C', 55, 7);
   const RIM = el('rim'), sp = [L, T, ...F, C], RX = 31, RY = 28, Y0 = 18 + 32;
   const S = { W: 0, slot: 0, cx: [], target: 0, raf: 0, last: 0 };
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
