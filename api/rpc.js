@@ -82,18 +82,18 @@ async function poll(uid, d) {
 }
 
 async function login(d, ip, ctx) {
-  const db = await getDb(true), u = db.users[d.id];
-  if (!u) return { type: 'auth_error', msg: 'Nama tidak ditemukan.' };
-  const t = now(), ku = 'u:' + u.id, ki = 'i:' + ip;
-  const f = (await q('SELECT k, until FROM fails WHERE k = ANY($1)', [[ku, ki]])).rows;
+  // Login memakai nama yang diketik (bukan daftar pilihan): nama tak dikenal dan PIN salah diberi pesan yang sama
+  const db = await getDb(true), u = db.users[L.userId(d.name || '')];
+  const t = now(), ku = u ? 'u:' + u.id : null, ki = 'i:' + ip, keys = ku ? [ku, ki] : [ki];
+  const f = (await q('SELECT k, until FROM fails WHERE k = ANY($1)', [keys])).rows;
   if (f.some(r => Number(r.until) > t)) return { type: 'auth_error', msg: 'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.' };
   const pin = String(d.pin || '');
-  if (pin.length < 4 || pin.length > 12 || !(await L.okPin(u, pin))) {
-    for (const [k, lim, lock] of [[ku, 5, 60000], [ki, 20, 600000]])
+  if (!u || pin.length < 4 || pin.length > 12 || !(await L.okPin(u, pin))) {
+    for (const [k, lim, lock] of [[ku, 5, 60000], [ki, 20, 600000]]) if (k)
       await q(`INSERT INTO fails (k, n, until, ts) VALUES ($1, 1, 0, $2) ON CONFLICT (k) DO UPDATE SET
         n = CASE WHEN fails.ts < $2 - 600000 THEN 1 ELSE fails.n + 1 END, ts = $2,
         until = CASE WHEN (CASE WHEN fails.ts < $2 - 600000 THEN 1 ELSE fails.n + 1 END) >= $3 THEN $2 + $4 ELSE 0 END`, [k, t, lim, lock]);
-    return { type: 'auth_error', msg: 'PIN salah.' };
+    return { type: 'auth_error', msg: 'Nama atau PIN salah.' };
   }
   await q('DELETE FROM fails WHERE k = $1', [ku]);
   const s = crypto.randomBytes(24).toString('hex');
@@ -103,7 +103,7 @@ async function login(d, ip, ctx) {
 }
 
 async function route(d, ip, ctx) {
-  if (d.a === 'roster') return { type: 'roster', list: L.roster(await getDb()) };
+  if (d.a === 'roster') return { type: 'roster', list: [] }; // daftar nama tidak lagi dibuka ke publik
   if (d.a === 'login') return login(d, ip, ctx);
   const au = await authed(d.session);
   if (!au) return { type: 'auth_error', resume: true };
