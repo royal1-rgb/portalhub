@@ -181,17 +181,18 @@ main.nw .nseg{margin:0}
 .mb{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--err);color:#fff;font:700 10px/18px var(--ff);text-align:center;font-style:normal;box-shadow:0 0 0 2px var(--card)}
 #topback{margin:0 -4px 0 -10px;color:var(--ink)}
 
-/* ---- Menu bawah: menu terpilih naik dalam gelembung, bar berlekuk mengikuti, bergeser halus ---- */
-@property --i{syntax:'<number>';inherits:true;initial-value:0}
-nav{--i:0;--n:4;position:relative;z-index:6;display:flex;justify-content:stretch;background:none;backdrop-filter:none;box-shadow:none;border:0;filter:drop-shadow(0 -3px 8px rgba(15,23,42,.08));transition:--i .5s cubic-bezier(.65,0,.25,1)}
-nav::before{content:"";position:absolute;inset:0;background:rgba(255,255,255,.98);border-radius:18px 18px 0 0;
-  -webkit-mask:radial-gradient(circle 31px at calc((var(--i) + .5) * (100% / var(--n))) 5px,transparent 30.5px,#000 31px);mask:radial-gradient(circle 31px at calc((var(--i) + .5) * (100% / var(--n))) 5px,transparent 30.5px,#000 31px)}
-.nb{position:absolute;top:-26px;left:calc((var(--i) + .5) * (100% / var(--n)));width:62px;height:62px;margin-left:-31px;box-sizing:border-box;border:4px solid var(--surface);border-radius:50%;background:linear-gradient(145deg,#3B7BF5,#0D429D);box-shadow:0 8px 16px -4px rgba(13,66,157,.45);z-index:1;pointer-events:none}
-nav button{flex:1;min-width:0;position:relative;z-index:2;-webkit-tap-highlight-color:transparent}
-nav button .ni{position:relative;display:grid;place-items:center;transition:transform .5s cubic-bezier(.34,1.45,.55,1),color .25s;will-change:transform}
-nav button .nl{transition:transform .5s cubic-bezier(.34,1.45,.55,1),color .25s}
-nav button.on{color:var(--primary)}nav button.on .ni{transform:translateY(-15px) scale(1.06);color:#fff;transition-delay:.06s}nav button.on .nl{transform:translateY(5px);color:var(--primary)}
-nav .badge{top:-5px;right:-10px}nav button.on .badge{top:-4px;right:-8px;background:#fff;color:var(--primary);box-shadow:0 0 0 2px var(--primary)}
+/* ---- Menu bawah: Liquid Floating Bar (bar kaca melayang + blob cair bergerak dengan fisika pegas) ---- */
+nav{position:relative;z-index:6;display:block;height:auto;padding:14px 12px calc(10px + env(safe-area-inset-bottom,0px));background:none;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;border:0;filter:none;transition:none}
+.lqw{position:relative;height:64px;display:flex}
+.lqw::before{content:"";position:absolute;inset:0;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,242,255,.8));-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);border:1px solid rgba(255,255,255,.95);box-shadow:0 16px 30px -14px rgba(13,66,157,.38),0 3px 8px rgba(15,23,42,.07),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(13,66,157,.06)}
+.lq-svg{position:absolute;left:0;top:-18px;overflow:visible;pointer-events:none;z-index:1;filter:drop-shadow(0 9px 9px rgba(13,66,157,.3))}
+nav button{flex:1;min-width:0;min-height:0;height:64px;margin:0;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#64748b;font:700 11px/14px var(--ff);-webkit-tap-highlight-color:transparent}
+nav button .ni{position:relative;display:grid;place-items:center;transition:transform .5s cubic-bezier(.34,1.56,.64,1);will-change:transform}
+nav button .nl{transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+nav button.on{color:#fff}
+nav button.on .ni{transform:translateY(-1px) scale(1.12)}
+@supports (color:color-mix(in srgb,red,blue)){nav button,nav button.on{color:color-mix(in srgb,#fff calc(var(--k,0) * 100%),#64748b)}}
+nav .badge{top:-5px;right:-10px}nav button.on .badge{top:-4px;right:-8px;background:#fff;color:var(--primary);box-shadow:0 0 0 2px rgba(255,255,255,.4)}
 nav.noanim,nav.noanim *{transition:none!important}
 @media (prefers-reduced-motion:reduce){nav,nav *{transition:none!important}}
 
