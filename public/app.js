@@ -12,7 +12,7 @@ const COL = [['#e3dfff', '#372abf'], ['#c9f7e3', '#005137'], ['#dce9ff', '#1f1ab
 let session = ls.get('hub-session'), roster = [], pinChanged = true, authed = false;
 // Splash tampil minimal 2 detik, lalu halaman login (atau aplikasi bila sesi masih berlaku)
 let lastPin = '', forcePin = false, pinSet = false, splashOn = true;
-const splashMin = new Promise(r => setTimeout(r, 5000));
+const splashMin = new Promise(r => setTimeout(r, 2000));
 function hideSplash() {
   if (!splashOn) return; splashOn = false;
   splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
@@ -136,19 +136,77 @@ function paintOff() {
 // ---------- render utama ----------
 const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', izin: 'Izin Pulang', news: 'News Update', me: 'Profil Karyawan' };
 const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
-function paintNav(n, sub) { // menu dibuat sekali lalu hanya diubah kelasnya, supaya gelembung penanda bergeser dengan animasi halus
+// ---------- Liquid Floating Bar: blob cair (metaball) dengan fisika pegas ----------
+function lqBuild(nav) {
+  const NS = 'http://www.w3.org/2000/svg', wrap = nav.querySelector('.lqw'), n = NAV.length;
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'lq-svg'); svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = `<defs>
+    <linearGradient id="lqg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="360" y2="0"><stop offset="0" stop-color="#0D429D"/><stop offset=".5" stop-color="#1f62e8"/><stop offset="1" stop-color="#6d3fd8"/></linearGradient>
+    <filter id="lqf" filterUnits="userSpaceOnUse" x="-30" y="-30" width="420" height="160" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="g"/>
+      <feGaussianBlur in="g" stdDeviation=".7"/>
+    </filter></defs>
+    <g filter="url(#lqf)">
+      <ellipse data-o="rim" fill="#22cdf5"/><ellipse data-o="T" fill="url(#lqg)"/>
+      <ellipse data-o="F1" fill="url(#lqg)"/><ellipse data-o="F2" fill="url(#lqg)"/><ellipse data-o="F3" fill="url(#lqg)"/>
+      <ellipse data-o="L" fill="url(#lqg)"/><ellipse data-o="C" fill="#2aa8ff"/>
+    </g>`;
+  wrap.insertBefore(svg, wrap.firstChild);
+  const el = k => svg.querySelector(`[data-o="${k}"]`), btns = [...wrap.querySelectorAll('button')];
+  const mk = (k, kk, c) => ({ x: 0, v: 0, k: kk, c, e: el(k) });
+  const L = mk('L', 200, 18), T = mk('T', 56, 13), F = [mk('F1', 140, 16), mk('F2', 100, 13), mk('F3', 70, 11)], C = mk('C', 110, 20);
+  const RIM = el('rim'), sp = [L, T, ...F, C], RX = 31, RY = 28, Y0 = 18 + 32;
+  const S = { W: 0, slot: 0, cx: [], target: 0, raf: 0, last: 0 };
+  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const set = (e, cx, cy, rx, ry) => { e.setAttribute('cx', cx.toFixed(2)); e.setAttribute('cy', cy.toFixed(2)); e.setAttribute('rx', Math.max(0, rx).toFixed(2)); e.setAttribute('ry', Math.max(0, ry).toFixed(2)); };
+  const draw = () => {
+    const slot = S.slot || 1, dTL = Math.abs(L.x - T.x), s = Math.min(1, dTL / (slot * .9)), sp0 = Math.abs(L.v);
+    const sx = 1 + Math.min(.3, sp0 / (slot * 11)), sy = 1 + Math.min(.22, sp0 / (slot * 16)) + .18 * s;
+    set(L.e, L.x, Y0, RX * sx, RY * sy); set(RIM, L.x + 3, Y0 + 5.5, RX * sx * .88, RY * sy * .9);
+    const rT = 1 - .55 * s; set(T.e, T.x, Y0, RX * rT, RY * rT);
+    const g = Math.min(1, dTL / (slot * .6)), fr = [.55, .42, .3];
+    F.forEach((f, i) => set(f.e, f.x, Y0 + (i - 1) * 2, RX * fr[i] * g, RY * fr[i] * g));
+    const bob = Math.min(8, Math.abs(C.v) / (slot * 3.2));
+    set(C.e, Math.min(C.x + 13, S.W - 26), Y0 - 25 - bob * .6, 11.5 + bob * .4, 10.5 + bob * .8);
+    btns.forEach((b, i) => b.style.setProperty('--k', Math.max(0, Math.min(1, 1.3 - Math.abs(L.x - S.cx[i]) / (slot * .5))).toFixed(3)));
+  };
+  const snap = () => { const t = S.cx[S.target] || 0; sp.forEach(o => { o.x = t; o.v = 0; }); draw(); };
+  const frame = now => {
+    const dt = Math.min(1 / 30, (now - S.last) / 1000 || 1 / 60); S.last = now; const t = S.cx[S.target], n2 = 2, h = dt / n2; let rest = true;
+    for (let q = 0; q < n2; q++) sp.forEach(o => { o.v += (-o.k * (o.x - t) - o.c * o.v) * h; o.x += o.v * h; });
+    sp.forEach(o => { if (Math.abs(o.x - t) > .05 || Math.abs(o.v) > .2) rest = false; });
+    if (rest) { snap(); S.raf = 0; return; }
+    draw(); S.raf = requestAnimationFrame(frame);
+  };
+  const measure = () => {
+    const W = wrap.clientWidth; if (!W) return; S.W = W; S.slot = W / n; S.cx = Array.from({ length: n }, (_, i) => (i + .5) * S.slot);
+    svg.setAttribute('width', W); svg.setAttribute('height', 18 + 64 + 14); svg.setAttribute('viewBox', `0 0 ${W} ${18 + 64 + 14}`);
+    svg.querySelector('linearGradient').setAttribute('x2', W);
+    const f = svg.querySelector('filter'); f.setAttribute('width', W + 60); 
+    if (S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; } snap();
+  };
+  new ResizeObserver(measure).observe(wrap); measure();
+  nav._lq = { to(i, instant) {
+    if (i === S.target && !instant) return; S.target = i;
+    if (instant || reduce || !S.W) { if (S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; } snap(); return; }
+    if (!S.raf) { S.last = performance.now(); S.raf = requestAnimationFrame(frame); }
+  } };
+}
+function paintNav(n, sub) { // menu dibuat sekali; blob cair bergerak ke menu terpilih dengan animasi pegas
   const nav = $('#nav'); let first = false;
   if (!nav.dataset.built) {
-    first = true; nav.classList.add('noanim'); nav.dataset.built = '1'; nav.style.setProperty('--n', NAV.length);
-    nav.innerHTML = '<i class="nb"></i>' + NAV.map(([k, i, l]) => `<button data-tab="${k}"><span class="ni">${ic(i)}<span class="badge" hidden></span></span><span class="nl">${l}</span></button>`).join('');
+    first = true; nav.classList.add('noanim'); nav.dataset.built = '1';
+    nav.innerHTML = '<div class="lqw">' + NAV.map(([k, i, l]) => `<button data-tab="${k}"><span class="ni">${ic(i)}<span class="badge" hidden></span></span><span class="nl">${l}</span></button>`).join('') + '</div>';
+    lqBuild(nav);
   }
   const idx = Math.max(0, NAV.findIndex(([k]) => tab === k || (sub && k === 'home')));
-  nav.style.setProperty('--i', idx);
   [...nav.querySelectorAll('button')].forEach((b, j) => {
     const on = j === idx, bg = b.querySelector('.badge'), k = NAV[j][0];
     b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     const show = k === 'chat' && n > 0; bg.hidden = !show; if (show) bg.textContent = n;
   });
+  if (nav._lq) nav._lq.to(idx, first);
   if (first) requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.remove('noanim')));
 }
 function render() {
