@@ -3,8 +3,8 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "GANTI_DENGAN_PACKAGE_ID_DARI_PWABUILDER",
-      "sha256_cert_fingerprints": ["GANTI_DENGAN_SHA256_DARI_PWABUILDER"]
+      "package_name": "com.mjsgroup.portalhub",
+      "sha256_cert_fingerprints": ["7D:D9:26:32:CD:43:1C:2A:CE:9E:7F:6E:94:A5:71:7D:CE:9F:B7:6E:8C:94:74:CA:BB:1B:89:92:8F:6C:D3:1F"]
     }
   }
 ]
