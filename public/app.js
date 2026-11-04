@@ -1,7 +1,7 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { megaphone: 'M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM15 9.5a4 4 0 010 5M17.5 7a7.5 7.5 0 010 10', doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 // Menu terakhir disimpan per tab browser: refresh tetap di menu yang sama, login baru selalu mulai dari Beranda
 const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
@@ -17,6 +17,7 @@ function hideSplash() {
   if (!splashOn) return; splashOn = false;
   splashMin.then(() => { const l = $('#login'); if (l) l.classList.add('live'); const sp = $('#splash'); if (!sp) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 800); });
 }
+let ann = [], annAll = []; // pengumuman: 5 terbaru (Beranda) dan daftar lengkap (menu admin)
 const lastUser = () => { try { return JSON.parse(ls.get('hub-last') || 'null'); } catch { return null; } };
 let helper = false, admRows = [], dev = null, devPending = 0, att = null, attU = null, attC = null, attSrc = null, attKind = 'telat', attFrom = null, attTo = null, attMonth = 'all', attSort = 'desc', quotas = {}, cuti = null, admin = false, empPaint = null, peer = {}, ws, me = null, users = new Map(), msgs = {}, reads = {}, tab = savedTab(), filter = 'all', q = '', open = null, typing = {}, connected = false;
 
@@ -101,7 +102,7 @@ function handle(d) {
   else if (d.type === 'pin_err') pinErr(d.msg);
   else if (d.type === 'init') {
     if (d.session) { const fresh = d.session !== session; session = d.session; ls.set('hub-session', session); if (fresh) tab = 'home'; } // login baru -> mulai dari Beranda; pemulihan sesi (refresh) -> menu terakhir
-    authed = true; pinChanged = !!d.pinChanged || pinSet; hideSplash();
+    authed = true; pinChanged = !!d.pinChanged || pinSet; ann = d.ann || []; hideSplash();
     { const m = d.users.find(x => x.id === d.me); if (m) ls.set('hub-last', JSON.stringify({ id: m.id, name: m.name, title: m.title })); }
     if (!pinChanged) { if (!forcePin) showSetPin(); } else { forcePin = false; $('#login').hidden = true; $('#login').innerHTML = ''; }
     me = d.me; admin = !!d.admin; helper = !!d.helper; dev = d.dev || null; devPending = d.devPending || 0; ci = d.ci || null; if (d.office) office = d.office; cuti = d.cuti; attC = d.chk && d.chk.has ? d.chk : null; setAtt(d.att); quotas = d.quotas || {}; peer = d.peer || {}; users = new Map(d.users.map(u => [u.id, u])); msgs = d.msgs; reads = d.reads; connected = true;
@@ -393,15 +394,14 @@ function mountCard() {
   updHc(); initMap(); if (hcMap) updMap();
 }
 function renderHome() {
-  const u = users.get(me);
+  const u = users.get(me), oldRow = $('#anrow'), keepSl = oldRow ? oldRow.scrollLeft : 0;
   $('#main').innerHTML = `<div class="gr"><h2>Halo, ${esc(u.name.split(' ').slice(0, 2).join(' '))} </h2><p>Selamat datang di Hub Karyawan · ${esc(u.title)}</p></div>
     ${devBanner()}
     <div id="hcslot"></div>
     ${homeMenu()}
-    <div class="card"><b style="font-weight:600">Undang rekan kerja</b><p style="margin:4px 0 12px;color:var(--ink2)">Minta rekan membuka alamat ini di browser (satu jaringan Wi-Fi/LAN).</p>
-    <button class="btn sec2" id="copy">${ic('copy', 18)}<span>${esc(location.origin)}</span></button></div>
+    ${homeAnn()}
     <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
-  mountCard();
+  mountCard(); annBind(keepSl);
   const saved = filter; filter = 'all'; q = '';
   const items = convIds().filter(c => last(c)).sort((a, b) => last(b).time - last(a).time).slice(0, 3);
   $('#hthreads').innerHTML = items.length ? items.map(c => { const m = meta(c), l = last(c); return `<button class="th ${unread(c) ? 'u' : ''}" data-c="${esc(c)}">${m.av}<div class="bd"><div class="r1"><span class="nm">${esc(m.name)}</span><time>${shortT(l.time)}</time></div><p>${esc(l.text)}</p></div></button>`; }).join('') : '<div class="empty">Belum ada obrolan.</div>';
@@ -794,8 +794,80 @@ function attSheet() {
 }
 // ---------- Perangkat (cegah check in lewat ponsel orang lain) ----------
 // Menu admin berbentuk kisi ikon (4 kolom), seperti menu utama aplikasi mobile
+// ---------- Announcements: pengumuman kantor (teks + gambar) oleh admin ----------
+const ANM = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const annT = ts => { const d = new Date(ts + 7 * 36e5); return `${d.getUTCDate()} ${ANM[d.getUTCMonth()]} ${d.getUTCFullYear()} · ${wibHM(ts)} WIB`; };
+function homeAnn() { // deretan kartu yang bisa digeser menyamping (maksimal 5 terbaru)
+  const head = `<div class="sec"><h3 class="h">Announcements</h3></div>`;
+  if (!ann.length) return head + `<div class="card an-e">${ic('megaphone', 22)}<div><b>Belum ada pengumuman</b>${admin ? '<small>Tambahkan lewat Profil › Menu Admin › Announcements.</small>' : ''}</div></div>`;
+  const cards = ann.map(a => `<button class="an-c" data-ann="${a.id}">${a.img ? `<img class="an-i" src="${esc(a.img)}" alt="" loading="lazy" draggable="false">` : `<div class="an-i an-n">${ic('megaphone', 30)}</div>`}<div class="an-b"><b>${esc(a.title)}</b><p>${esc(a.body)}</p><small>${ic('clock', 12)}${annT(a.ts)}</small></div></button>`).join('');
+  return head + `<div class="an-row" id="anrow">${cards}</div>${ann.length > 1 ? `<div class="an-dots" id="andots">${ann.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}`;
+}
+function annBind(sl) { // posisi geser dipertahankan saat Beranda digambar ulang; titik penanda mengikuti kartu
+  const row = $('#anrow'); if (!row) return; row.scrollLeft = sl || 0;
+  const dots = $('#andots') ? [...$('#andots').children] : [];
+  row.onscroll = () => { const c = row.firstElementChild; if (!c || !dots.length) return; const i = Math.min(dots.length - 1, Math.round(row.scrollLeft / (c.offsetWidth + 12))); dots.forEach((d, j) => d.classList.toggle('on', j === i)); };
+  row.onscroll();
+}
+function annView(id) {
+  const a = ann.find(x => x.id === id) || annAll.find(x => x.id === id); if (!a) return;
+  const sh = $('#sheet'); sh.hidden = false;
+  sh.innerHTML = `<div class="sh"><h3>Pengumuman<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>${a.img ? `<img class="an-full" src="${esc(a.img)}" alt="">` : ''}<h2 class="an-ft">${esc(a.title)}</h2><div class="an-fm">${ic('clock', 14)}<span>${annT(a.ts)}${a.by ? ' · ' + esc(a.by) : ''}</span></div><div class="an-fb">${esc(a.body)}</div></div>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+}
+async function annPrep(file) { // perkecil di ponsel: maksimal 1200 px, JPEG, di bawah ±480 KB
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    let max = 1200, qual = .82;
+    for (let n = 0; n < 4; n++) {
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      const out = c.toDataURL('image/jpeg', qual);
+      if (out.length * .75 <= 480 * 1024) return out;
+      max = Math.round(max * .8); qual = Math.max(.6, qual - .08);
+    }
+    throw new Error('besar');
+  } finally { URL.revokeObjectURL(url); }
+}
+function annPaint(list) {
+  annAll = list; ann = list.slice(0, 5);
+  const c = $('#acnt'), l = $('#alist'); if (c) c.textContent = list.length;
+  if (l) l.innerHTML = list.map(a => `<div class="li" style="align-items:flex-start">${a.img ? `<img class="an-th" src="${esc(a.img)}" alt="">` : `<span class="ic an-th an-thn">${ic('megaphone', 20)}</span>`}<div style="min-width:0;flex:1"><b class="an-lt">${esc(a.title)}</b><small>${annT(a.ts)}</small></div><button type="button" class="chip" data-annx="${a.id}">Hapus</button></div>`).join('') || '<div class="empty">Belum ada pengumuman.</div>';
+  if (tab === 'home') render();
+}
+async function annDel(id) { const r = await api({ a: 'anndel', id }); if (r && r.type === 'annlist') annPaint(r.list); else alert('Gagal menghapus. Coba lagi.'); }
+function annSheet() {
+  const sh = $('#sheet'); sh.hidden = false; let img = null, busy = false;
+  sh.innerHTML = `<form class="sh" id="af" autocomplete="off"><h3>Announcements<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+    <label class="fld"><span>Judul</span><input id="at" maxlength="80" required autocomplete="off" placeholder="Contoh: Libur Bersama Natal"></label>
+    <label class="fld"><span>Keterangan</span><textarea id="ab" maxlength="1000" rows="4" required placeholder="Tulis isi pengumuman atau kegiatan"></textarea></label>
+    <div class="an-auto">${ic('clock', 16)}<span>Tanggal dan jam terisi otomatis saat diterbitkan:<br><b id="anow"></b></span></div>
+    <div class="fld"><span>Gambar (opsional)</span><label class="btn sec2" style="cursor:pointer">${ic('upload', 18)}Pilih gambar<input type="file" id="ai" accept="image/*" hidden></label><div id="aprev"></div></div>
+    <div class="err" id="aerr" role="alert"></div><button class="btn" type="submit" id="asv">${ic('plus', 18)}Terbitkan</button>
+    <div class="sec"><h3 class="h" style="font-size:14px">Sudah terbit (<span id="acnt">0</span>)</h3><small style="color:var(--ink2)">5 terbaru tampil di Beranda</small></div><div id="alist"><div class="empty">Memuat…</div></div></form>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) sh.hidden = true; };
+  const tick = () => { const n = $('#anow'); if (!n) return clearInterval(tm); n.textContent = annT(Date.now()); }, tm = setInterval(tick, 1000); tick();
+  const err = (m, good) => { const e = $('#aerr'); if (e) { e.style.color = good ? 'var(--sec)' : 'var(--err)'; e.textContent = m; } };
+  $('#ai').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return; err('Memproses gambar…', true);
+    try { img = await annPrep(f); $('#aprev').innerHTML = `<div class="an-pv"><img src="${img}" alt="Pratinjau"><button type="button" id="arm" aria-label="Hapus gambar">${ic('close', 16)}</button></div>`; err(''); }
+    catch { img = null; e.target.value = ''; $('#aprev').innerHTML = ''; err('Gambar tidak dapat dibaca. Gunakan berkas JPG atau PNG.'); }
+  };
+  $('#aprev').onclick = e => { if (e.target.closest('#arm')) { img = null; $('#aprev').innerHTML = ''; $('#ai').value = ''; } };
+  $('#af').onsubmit = async e => {
+    e.preventDefault(); if (busy) return; busy = true; const b = $('#asv'); b.disabled = true; b.textContent = 'Menerbitkan…'; err('');
+    const r = await api({ a: 'annadd', title: $('#at').value, body: $('#ab').value, img });
+    busy = false; b.disabled = false; b.innerHTML = `${ic('plus', 18)}Terbitkan`;
+    if (!r || r.type !== 'annlist') return err('Gagal menerbitkan. Periksa koneksi lalu coba lagi.');
+    if (r.error) return err(r.error);
+    $('#at').value = ''; $('#ab').value = ''; img = null; $('#aprev').innerHTML = ''; $('#ai').value = ''; err('Pengumuman diterbitkan.', true); annPaint(r.list);
+  };
+  api({ a: 'annlist' }).then(r => { if (r && r.type === 'annlist') annPaint(r.list); else if ($('#alist')) $('#alist').innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; });
+}
 function adminMenu() {
-  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3']];
+  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announcements', '#0891B2', '#E0F7FA']];
   const items = admin ? all : all.filter(i => ['cutiAdm', 'attAdm'].includes(i[0])); // admin pembantu: hanya Data Cuti dan Data Absensi
   return `<div class="card" style="padding:16px 12px 10px"><h3 class="h" style="font-size:16px;margin:0 6px 12px">${admin ? 'Menu Admin' : 'Menu Admin Data'}</h3><div class="mgrid">${items.map(([id, i, l, c, bg]) =>
     `<button class="mi" id="${id}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}${id === 'devAdm' && devPending ? `<i class="mb">${devPending}</i>` : ''}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
@@ -902,7 +974,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -923,6 +995,9 @@ document.addEventListener('click', e => {
   else if (t.dataset.c) openChat(t.dataset.c);
   else if (t.dataset.u) { $('#sheet').hidden = true; openChat(dmId(t.dataset.u)); }
   else if (t.id === 'new') newSheet();
+  else if (t.dataset.ann) annView(+t.dataset.ann);
+  else if (t.dataset.annx) { if (confirm('Hapus pengumuman ini?')) annDel(t.dataset.annx); }
+  else if (t.id === 'annAdm') annSheet();
   else if (t.id === 'pin') pinSheet();
   else if (t.id === 'emp') empSheet();
   else if (t.id === 'cutiAdm') cutiSheet();
