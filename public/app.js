@@ -725,8 +725,8 @@ function renderAtt() {
   if (!a || !a.has) { $('#main').innerHTML = head + `<div class="empty">${attSrc === 'chk' ? 'Belum ada check-in. Lakukan Check In dari Beranda saat berada di lokasi kantor.' : 'Data absensi belum tersedia. Admin belum mengunggah data absensi.'}</div>`; return; }
   const foot = `<div class="ver" style="text-align:left;font-weight:400;margin:4px 0 14px">${attSrc === 'chk' ? 'Berdasarkan check-in GPS di aplikasi' : `Data diperbarui ${fmtDT(a.updatedAt)} oleh ${esc(a.by)}`}</div>`;
   if (!a.rows.length) { $('#main').innerHTML = head + '<div class="empty">Belum ada catatan absensi atas namamu pada periode ini. Jika menurutmu keliru, hubungi admin.</div>' + foot; return; }
-  if (!$('#attres') || !$('#main').querySelector('[data-as].on') || $('#main').dataset.as !== attSrc) {
-    $('#main').dataset.as = attSrc;
+  if (!$('#attres') || !$('#main').querySelector('[data-as].on') || $('#main').dataset.asrc !== attSrc) {
+    $('#main').dataset.asrc = attSrc;
     $('#main').innerHTML = attSeg() + `<div class="sec" style="margin:0 0 10px"><div><h3 class="h">Rekap Absensi</h3><small id="attper" style="color:var(--ink2)"></small></div></div>
       <div class="card" style="padding:14px 16px"><div class="fl">Pilih bulan</div><div class="chips" id="amchips" style="margin:6px -16px 12px;padding:2px 16px"></div>
       <div class="drow"><label class="fld" style="margin:0"><span>Dari tanggal</span><input id="adf" type="date"></label><label class="fld" style="margin:0"><span>Sampai tanggal</span><input id="adt" type="date"></label></div>
@@ -977,7 +977,7 @@ function newSheet() {
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#copy,#logout,#bell,#meBtn');
   if (!t) return;
-  if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.as = ''; renderAtt(); $('#main').scrollTop = 0; return; }
+  if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.asrc = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
   if (t.dataset.nc) { newsCat = t.dataset.nc; renderNews(true); return; }
   if (t.dataset.tab) { tab = t.dataset.tab; render(); $('#main').scrollTop = 0; }
