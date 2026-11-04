@@ -2,6 +2,7 @@
 const crypto = require('crypto');
 const { q, ready, getDb, mutate, tx, bumpVer } = require('../lib/db');
 const L = require('../lib/logic');
+const A = require('../lib/ann');
 
 // Check in/out hanya dari perangkat yang disetujui admin (cegah login + absen lewat ponsel orang lain).
 // Matikan dengan variabel lingkungan DEVICE_BINDING=0.
@@ -45,7 +46,7 @@ async function snapshot(uid, session, ctx, viaPin) {
   const devStatus = BIND && ctx ? await ensureDevice(uid, ctx, !!viaPin) : 'approved';
   const dev = { status: devStatus, label: ctx ? L.deviceLabel(ctx.ua) : '', on: BIND };
   const devPending = u.admin && BIND ? Number((await q("SELECT count(*) AS n FROM devices WHERE status = 'pending'")).rows[0].n) : 0;
-  const [m, rd, pe, pr, v, am, ar, ck] = await Promise.all([
+  const [m, rd, pe, pr, v, am, ar, ck, an] = await Promise.all([
 
     q(`SELECT id, conv, frm, body, ts FROM (SELECT *, row_number() OVER (PARTITION BY conv ORDER BY id DESC) rn FROM messages WHERE ${ME}) x WHERE rn <= 200 ORDER BY id`, [uid]),
     q('SELECT conv, last_id FROM reads WHERE uid = $1', [uid]),
@@ -55,6 +56,7 @@ async function snapshot(uid, session, ctx, viaPin) {
     q("SELECT v FROM kv WHERE k = 'att_meta'"),
     q('SELECT d, aktual, status, kind, mins FROM attendance WHERE uid = $1 ORDER BY d DESC', [uid]),
     q('SELECT d, ts, out_ts, iz_tipe, iz_alasan FROM checkins WHERE uid = $1 ORDER BY d DESC', [uid]),
+    A.latest(q),
   ]);
   const seen = Object.fromEntries(pr.rows.map(r => [r.uid, Number(r.ts)])), msgs = { all: [] }, peer = {}, reads = {};
   for (const r of m.rows) (msgs[r.conv] = msgs[r.conv] || []).push(msgOut(r));
@@ -66,7 +68,7 @@ async function snapshot(uid, session, ctx, viaPin) {
   const crow = ck.rows.map(r => L.checkinRow(Number(r.ts), r.out_ts && Number(r.out_ts), { tipe: r.iz_tipe, alasan: r.iz_alasan })), cd = crow.map(r => r.d).sort(); // check-in GPS dipisah dari data unggahan admin
   const chk = crow.length ? { has: true, file: 'Check-in GPS', total: crow.length, people: 1, from: cd[0], to: cd[cd.length - 1], updatedAt: Math.max(...ck.rows.map(r => Number(r.ts))), by: 'Check-in GPS', rows: crow } : { has: false };
   const today = L.wib(t).d, tc = ck.rows.find(r => r.d === today);
-  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, helper: !!u.helper, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts), { tipe: tc.iz_tipe, alasan: tc.iz_alasan }) } : null, ver: v.rows[0].n, maxId, rnow: t - 3000 };
+  return { type: 'init', dev, devPending, me: uid, session, pinChanged: !!u.pinChanged, admin: !!u.admin, helper: !!u.helper, cuti: L.cutiFor(db, u), quotas: u.admin ? L.quotaMap(db) : undefined, users, msgs, reads, peer, att, chk, office: L.OFFICE, ci: tc ? { d: today, ts: Number(tc.ts), out: tc.out_ts ? Number(tc.out_ts) : null, row: L.checkinRow(Number(tc.ts), tc.out_ts && Number(tc.out_ts), { tipe: tc.iz_tipe, alasan: tc.iz_alasan }) } : null, ann: an, ver: v.rows[0].n, maxId, rnow: t - 3000 };
 }
 
 async function poll(uid, d) {
@@ -116,6 +118,14 @@ async function route(d, ip, ctx) {
       await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await bumpVer(); return { type: 'bye' };
+    case 'annlist': case 'annadd': case 'anndel': { // hanya admin utama
+      const db = await getDb(true);
+      if (!(db.users[uid] || {}).admin) return { type: 'noop' };
+      let error = null;
+      if (d.a === 'annadd') { const r = await A.add(q, db.users[uid].name, d, t); error = r.error || null; if (!error) await bumpVer(); }
+      else if (d.a === 'anndel') { await A.del(q, d.id); await bumpVer(); }
+      return { type: 'annlist', error, list: await A.all(q) };
+    }
     case 'devlist': case 'devapprove': case 'devrevoke': case 'devapproveall': {
       const db = await getDb(true);
       if (!(db.users[uid] || {}).admin) return { type: 'noop' };
@@ -269,6 +279,13 @@ async function uploadAbsensi(req, res, raw, db, au) {
 }
 
 module.exports = async (req, res) => {
+  if (req.method === 'GET') { // gambar pengumuman: /api/rpc?img=ID&k=TANDA
+    try {
+      await ready(); const u = new URL(req.url, 'http://x'), b = await A.image(q, u.searchParams.get('img'), u.searchParams.get('k'));
+      if (!b) { res.statusCode = 404; return res.end(); }
+      res.statusCode = 200; res.setHeader('Content-Type', 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); return res.end(b);
+    } catch { res.statusCode = 500; return res.end(); }
+  }
   if (req.method !== 'POST') return json(res, 405, { error: 'Gunakan POST.' });
   try {
     await ready();
