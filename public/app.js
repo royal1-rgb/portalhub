@@ -797,10 +797,11 @@ function attSheet() {
 // ---------- Announcements: pengumuman kantor (teks + gambar) oleh admin ----------
 const ANM = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 const annT = ts => { const d = new Date(ts + 7 * 36e5); return `${d.getUTCDate()} ${ANM[d.getUTCMonth()]} ${d.getUTCFullYear()} · ${wibHM(ts)} WIB`; };
+const annSum = t => { const x = String(t || '').replace(/\s+/g, ' ').trim(); return x.length > 90 ? x.slice(0, 90).trimEnd() + '…' : x; }; // ringkasan untuk kartu; isi lengkap dibuka dengan mengetuk kartu
 function homeAnn() { // deretan kartu yang bisa digeser menyamping (maksimal 5 terbaru)
   const head = `<div class="sec"><h3 class="h">Announcements</h3></div>`;
   if (!ann.length) return head + `<div class="card an-e">${ic('megaphone', 22)}<div><b>Belum ada pengumuman</b>${admin ? '<small>Tambahkan lewat Profil › Menu Admin › Announcements.</small>' : ''}</div></div>`;
-  const cards = ann.map(a => `<button class="an-c" data-ann="${a.id}">${a.img ? `<img class="an-i" src="${esc(a.img)}" alt="" loading="lazy" draggable="false">` : `<div class="an-i an-n">${ic('megaphone', 30)}</div>`}<div class="an-b"><b>${esc(a.title)}</b><p>${esc(a.body)}</p><small>${ic('clock', 12)}${annT(a.ts)}</small></div></button>`).join('');
+  const cards = ann.map(a => `<button class="an-c" data-ann="${a.id}">${a.img ? `<img class="an-i" src="${esc(a.img)}" alt="" loading="lazy" draggable="false">` : `<div class="an-i an-n">${ic('megaphone', 30)}</div>`}<div class="an-b"><b>${esc(a.title)}</b><p>${esc(annSum(a.body))}</p><small>${ic('clock', 12)}${annT(a.ts)}</small></div></button>`).join('');
   return head + `<div class="an-row" id="anrow">${cards}</div>${ann.length > 1 ? `<div class="an-dots" id="andots">${ann.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}`;
 }
 function annBind(sl) { // posisi geser dipertahankan saat Beranda digambar ulang; titik penanda mengikuti kartu
