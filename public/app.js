@@ -399,13 +399,8 @@ function renderHome() {
     ${devBanner()}
     <div id="hcslot"></div>
     ${homeMenu()}
-    ${homeAnn()}
-    <div class="sec"><h3 class="h">Obrolan terbaru</h3></div><div class="threads" id="hthreads"></div>`;
+    ${homeAnn()}`;
   mountCard(); annBind(keepSl);
-  const saved = filter; filter = 'all'; q = '';
-  const items = convIds().filter(c => last(c)).sort((a, b) => last(b).time - last(a).time).slice(0, 3);
-  $('#hthreads').innerHTML = items.length ? items.map(c => { const m = meta(c), l = last(c); return `<button class="th ${unread(c) ? 'u' : ''}" data-c="${esc(c)}">${m.av}<div class="bd"><div class="r1"><span class="nm">${esc(m.name)}</span><time>${shortT(l.time)}</time></div><p>${esc(l.text)}</p></div></button>`; }).join('') : '<div class="empty">Belum ada obrolan.</div>';
-  filter = saved;
 }
 
 function renderMe() {
