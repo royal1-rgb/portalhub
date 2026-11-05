@@ -1008,6 +1008,29 @@ document.addEventListener('click', e => {
   else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); }
 });
 
+// ---------- Tombol Back di HP: tutup lapisan teratas / kembali ke menu sebelumnya, bukan menutup aplikasi ----------
+{
+  const closeTop = () => {
+    if (!authed) return false;
+    const ea = $('#early'); if (ea) { const n = ea.querySelector('[data-n]'); n ? n.click() : ea.remove(); return true; }
+    const sh = $('#sheet'); if (sh && !sh.hidden) { if (pinChanged) sh.hidden = true; return true; } // sheet buat PIN wajib tidak bisa ditutup
+    const dt = $('#detail'); if (dt && !dt.hidden) { dt.hidden = true; dt.innerHTML = ''; return true; }
+    const ch = $('#chat'); if (ch && !ch.hidden) { const b = $('#back'); if (b) b.click(); else { open = null; ch.hidden = true; ch.innerHTML = ''; render(); } return true; }
+    if (tab !== 'home') { tab = 'home'; render(); const mn = $('#main'); if (mn) mn.scrollTop = 0; return true; }
+    return false;
+  };
+  const guard = () => history.pushState({ g: 1 }, '');
+  let leaving = false, exitAt = 0;
+  const toast = m => { let t = $('#bktoast'); if (!t) { t = document.createElement('div'); t.id = 'bktoast'; t.className = 'bktoast'; document.body.appendChild(t); } t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2000); };
+  if (!(history.state && history.state.g)) { history.replaceState({ b: 1 }, ''); guard(); }
+  window.addEventListener('popstate', e => {
+    if (leaving || (e.state && e.state.g)) return;
+    if (closeTop()) return guard();
+    if (authed && Date.now() - exitAt > 2000) { exitAt = Date.now(); toast('Tekan sekali lagi untuk keluar'); return guard(); } // di Beranda: konfirmasi sebelum keluar
+    leaving = true; history.back();
+  });
+}
+
 $('#nav').innerHTML = ''; $('#title').textContent = TITLES.home;
 start();
 })();
