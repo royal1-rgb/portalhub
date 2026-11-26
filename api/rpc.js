@@ -115,6 +115,7 @@ async function route(d, ip, ctx) {
     case 'poll': return poll(uid, d);
     case 'logout': // riwayat obrolan tidak disimpan: hapus pesan yang dikirim user ini dan semua obrolan pribadinya
       await q('DELETE FROM sessions WHERE hash = $1', [hash]);
+      await q('DELETE FROM locations WHERE uid = $1', [uid]);
       await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await bumpVer(); return { type: 'bye' };
@@ -156,6 +157,19 @@ async function route(d, ip, ctx) {
       });
       if (changed) await bumpVer();
       return out || { type: 'noop' };
+    }
+    case 'locping': case 'locoff': { // lokasi terakhir dari GPS ponsel (hanya saat aplikasi terbuka & karyawan setuju)
+      if (d.a === 'locoff') { await q('DELETE FROM locations WHERE uid = $1', [uid]); return { type: 'noop' }; }
+      const lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc);
+      if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { type: 'noop' };
+      await q('INSERT INTO locations (uid, lat, lng, acc, ts) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (uid) DO UPDATE SET lat = EXCLUDED.lat, lng = EXCLUDED.lng, acc = EXCLUDED.acc, ts = EXCLUDED.ts', [uid, lat, lng, isFinite(acc) ? acc : null, t]);
+      return { type: 'noop' };
+    }
+    case 'loclist': { // hanya admin utama
+      const db = await getDb(true);
+      if (!(db.users[uid] || {}).admin) return { type: 'noop' };
+      const rows = (await q('SELECT uid, lat, lng, acc, ts FROM locations ORDER BY ts DESC')).rows, O = L.OFFICE;
+      return { type: 'loclist', now: t, office: O, list: rows.filter(r => db.users[r.uid]).map(r => ({ uid: r.uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts), dist: Math.round(L.distM(r.lat, r.lng, O.lat, O.lng)) })), total: Object.keys(db.users).length };
     }
     case 'checkin': case 'checkout': {
       const out = d.a === 'checkout', E = msg => ({ type: out ? 'checkout_err' : 'checkin_err', msg }), lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
@@ -219,7 +233,7 @@ async function route(d, ip, ctx) {
           delete db.users[tg.id]; (db.deleted = db.deleted || {})[tg.id] = 1; // penanda agar tidak dibuat ulang dari employees.json
           if (db.cuti) { if (db.cuti.rows) delete db.cuti.rows[tg.id]; if (db.cuti.quotas) delete db.cuti.quotas[tg.id]; }
           await q('DELETE FROM sessions WHERE uid = $1', [tg.id]); await q('DELETE FROM presence WHERE uid = $1', [tg.id]);
-          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]); await q('DELETE FROM checkins WHERE uid = $1', [tg.id]);
+          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]); await q('DELETE FROM checkins WHERE uid = $1', [tg.id]); await q('DELETE FROM locations WHERE uid = $1', [tg.id]);
           await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [tg.id]);
           return { type: 'emp_del', id: tg.id, name: tg.name, changed: 1 };
         }
