@@ -885,7 +885,7 @@ function locPush(force) {
 setInterval(() => locPush(), 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) locPush(true); });
 function locCard() {
-  return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Pemantauan lokasi kerja</b><small>Selama jam kerja ${WATCH.from.replace(':', '.')}–${WATCH.to.replace(':', '.')} WIB, lokasi GPS ponselmu terlihat oleh admin saat aplikasi terbuka. Di luar jam itu tidak dipantau.</small></div></div>`;
+  return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Pemantauan lokasi kerja</b><small>Patuhi aturan selama jam kerja, dilarang meninggalkan lokasi kerja tanpa izin dan persetujuan HR.</small></div></div>`;
 }
 const fmtDist = m => m < 1000 ? m + ' m' : (m / 1000).toFixed(1) + ' km';
 const locAgo = (ts, now) => { const m = Math.round(Math.max(0, now - ts) / 60000); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : fmtDT(ts); };
