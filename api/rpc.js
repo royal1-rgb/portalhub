@@ -158,18 +158,21 @@ async function route(d, ip, ctx) {
       if (changed) await bumpVer();
       return out || { type: 'noop' };
     }
-    case 'locping': case 'locoff': { // lokasi terakhir dari GPS ponsel (hanya saat aplikasi terbuka & karyawan setuju)
+    case 'locping': case 'locoff': { // lokasi GPS ponsel: hanya diterima pada jam pemantauan (WIB), di luar itu diabaikan
       if (d.a === 'locoff') { await q('DELETE FROM locations WHERE uid = $1', [uid]); return { type: 'noop' }; }
       const lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc);
-      if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { type: 'noop' };
+      if (!L.inWatch(t) || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { type: 'noop' };
       await q('INSERT INTO locations (uid, lat, lng, acc, ts) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (uid) DO UPDATE SET lat = EXCLUDED.lat, lng = EXCLUDED.lng, acc = EXCLUDED.acc, ts = EXCLUDED.ts', [uid, lat, lng, isFinite(acc) ? acc : null, t]);
       return { type: 'noop' };
     }
-    case 'loclist': { // hanya admin utama
+    case 'loclist': { // hanya admin utama; di luar jam pemantauan tidak ada data yang ditampilkan
       const db = await getDb(true);
       if (!(db.users[uid] || {}).admin) return { type: 'noop' };
-      const rows = (await q('SELECT uid, lat, lng, acc, ts FROM locations ORDER BY ts DESC')).rows, O = L.OFFICE;
-      return { type: 'loclist', now: t, office: O, list: rows.filter(r => db.users[r.uid]).map(r => ({ uid: r.uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts), dist: Math.round(L.distM(r.lat, r.lng, O.lat, O.lng)) })), total: Object.keys(db.users).length };
+      const O = L.OFFICE, W = L.WATCH, base = { type: 'loclist', now: t, office: { lat: O.lat, lng: O.lng, r: W.radius }, watch: { from: W.from, to: W.to } };
+      await q('DELETE FROM locations WHERE ts < $1', [t - 36e5 * 24]); // bersihkan data lama
+      if (!L.inWatch(t)) return { ...base, off: true, list: [], total: Object.keys(db.users).length };
+      const today = L.wib(t).d, rows = (await q('SELECT uid, lat, lng, acc, ts FROM locations ORDER BY ts DESC')).rows.filter(r => db.users[r.uid] && L.wib(r.ts).d === today);
+      return { ...base, off: false, list: rows.map(r => ({ uid: r.uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts), dist: Math.round(L.distM(r.lat, r.lng, O.lat, O.lng)) })), total: Object.keys(db.users).length };
     }
     case 'checkin': case 'checkout': {
       const out = d.a === 'checkout', E = msg => ({ type: out ? 'checkout_err' : 'checkin_err', msg }), lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
