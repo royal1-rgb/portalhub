@@ -862,7 +862,7 @@ function annSheet() {
   api({ a: 'annlist' }).then(r => { if (r && r.type === 'annlist') annPaint(r.list); else if ($('#alist')) $('#alist').innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; });
 }
 function adminMenu() {
-  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announcements', '#0891B2', '#E0F7FA']];
+  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announce', '#0891B2', '#E0F7FA']];
   const items = admin ? all : all.filter(i => ['cutiAdm', 'attAdm'].includes(i[0])); // admin pembantu: hanya Data Cuti dan Data Absensi
   return `<div class="card" style="padding:16px 12px 10px"><h3 class="h" style="font-size:16px;margin:0 6px 12px">${admin ? 'Menu Admin' : 'Menu Admin Data'}</h3><div class="mgrid">${items.map(([id, i, l, c, bg]) =>
     `<button class="mi" id="${id}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}${id === 'devAdm' && devPending ? `<i class="mb">${devPending}</i>` : ''}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
