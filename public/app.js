@@ -835,7 +835,7 @@ function annPaint(list) {
 async function annDel(id) { const r = await api({ a: 'anndel', id }); if (r && r.type === 'annlist') annPaint(r.list); else alert('Gagal menghapus. Coba lagi.'); }
 function annSheet() {
   const sh = $('#sheet'); sh.hidden = false; let img = null, busy = false;
-  sh.innerHTML = `<form class="sh" id="af" autocomplete="off"><h3>Announcements<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+  sh.innerHTML = `<form class="sh" id="af" autocomplete="off"><h3>Announce<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
     <label class="fld"><span>Judul</span><input id="at" maxlength="80" required autocomplete="off" placeholder="Contoh: Libur Bersama Natal"></label>
     <label class="fld"><span>Keterangan</span><textarea id="ab" maxlength="1000" rows="4" required placeholder="Tulis isi pengumuman atau kegiatan"></textarea></label>
     <div class="an-auto">${ic('clock', 16)}<span>Tanggal dan jam terisi otomatis saat diterbitkan:<br><b id="anow"></b></span></div>
