@@ -885,15 +885,16 @@ function locPush(force) {
 setInterval(() => locPush(), 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) locPush(true); });
 function locCard() {
-  return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b></b><small>Selama jam kerja ${WATCH.from.replace(':', '.')}–${WATCH.to.replace(':', '.')} WIB, lokasi GPS ponselmu terlihat oleh admin saat aplikasi terbuka. Di luar jam itu tidak dipantau.</small></div></div>`;
+  return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Pemantauan lokasi kerja</b><small>Selama jam kerja ${WATCH.from.replace(':', '.')}–${WATCH.to.replace(':', '.')} WIB, lokasi GPS ponselmu terlihat oleh admin saat aplikasi terbuka. Di luar jam itu tidak dipantau.</small></div></div>`;
 }
 const fmtDist = m => m < 1000 ? m + ' m' : (m / 1000).toFixed(1) + ' km';
 const locAgo = (ts, now) => { const m = Math.round(Math.max(0, now - ts) / 60000); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : fmtDT(ts); };
 function locClose() { clearInterval(locT); locT = null; if (locMap) { try { locMap.remove(); } catch {} } locMap = null; locLayer = null; }
 async function locSheet() {
   const sh = $('#sheet'); sh.hidden = false; locClose(); locFit = true;
-
-  
+  sh.innerHTML = `<div class="sh"><h3>Lokasi Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+    <p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Posisi GPS ponsel karyawan, <b>hanya dipantau pada jam kerja 08.00–16.00 WIB</b>. Diperbarui ±30 detik sekali selama aplikasi karyawan terbuka; jika aplikasi ditutup, yang tampil adalah posisi terakhir.</p>
+    <div id="lmap" class="lmap"></div><div id="lsum"></div><div id="llist"><div class="empty">Memuat…</div></div></div>`;
   sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) { sh.hidden = true; locClose(); } };
   loadLeaflet(ok => {
     const el = $('#lmap'); if (!el) return;
