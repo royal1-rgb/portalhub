@@ -863,47 +863,29 @@ function annSheet() {
 }
 
 // ---------- Lokasi karyawan (GPS ponsel) ----------
-// Karyawan: lokasi dikirim ±30 detik sekali HANYA saat aplikasi terbuka dan setelah ia setuju (bisa dimatikan di Profil).
-// Admin utama: Profil › Menu Admin › Lokasi Karyawan menampilkan posisi terakhir di peta + daftar.
-let locW = null, locPos = null, locLast = 0, locAsked = false, locMap = null, locLayer = null, locT = null, locData = [], locFit = true;
-const locOn = () => ls.get('hub-loc') === '1';
+// Karyawan: lokasi dikirim otomatis ±30 detik sekali HANYA pada jam kerja (08.00-16.00 WIB) dan hanya saat aplikasi terbuka; karyawan diberi tahu di Profil.
+// Admin utama: Profil › Menu Admin › Lokasi Karyawan menampilkan posisi terakhir di peta + status di kantor / di luar kantor.
+let locW = null, locPos = null, locLast = 0, locMap = null, locLayer = null, locT = null, locData = [], locFit = true;
+const WATCH = { from: '08:00', to: '16:00' };
 const locOk = () => !!navigator.geolocation && window.isSecureContext !== false;
-function locSync() {
-  if (!authed || !pinChanged || !locOk()) return;
-  const v = ls.get('hub-loc');
-  if (v === '1') return locStart();
-  if (v === null && !locAsked) {
-    locAsked = true;
-    setTimeout(() => {
-      if (!authed) return;
-      if (confirm('Bagikan lokasi ponselmu ke admin?\n\nLokasi hanya dikirim saat aplikasi terbuka dan bisa dimatikan kapan saja lewat Profil.')) { ls.set('hub-loc', '1'); locStart(); } else ls.set('hub-loc', '0');
-      if (tab === 'me') render();
-    }, 1500);
-  }
-}
+const locHours = () => { const h = new Date(Date.now() + 7 * 36e5).toISOString().slice(11, 16); return h >= WATCH.from && h < WATCH.to; };
+function locSync() { if (authed && pinChanged && locOk()) locStart(); }
 function locStart() {
   if (locW != null || !locOk()) return;
   locW = navigator.geolocation.watchPosition(p => { locPos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }; locPush(); },
-    e => { if (e.code === 1) { ls.set('hub-loc', '0'); locStop(); if (tab === 'me') render(); } },
+    e => {},
     { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
 }
 function locStop() { if (locW != null) navigator.geolocation.clearWatch(locW); locW = null; locPos = null; }
 function locPush(force) {
-  if (!locPos || !authed || document.hidden || !locOn()) return;
+  if (!locPos || !authed || document.hidden || !locHours()) return;
   const n = Date.now(); if (!force && n - locLast < 30000) return; locLast = n;
   api({ a: 'locping', ...locPos });
 }
 setInterval(() => locPush(), 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) locPush(true); });
 function locCard() {
-  if (!locOk()) return '';
-  const on = locOn();
-  return `<div class="card li" style="padding:14px 20px"><span class="ic ${on ? 'ok' : ''}">${ic('loc', 20)}</span><div><b>Bagikan lokasi ke admin</b><small>${on ? 'Aktif · dikirim saat aplikasi terbuka' : 'Nonaktif'}</small></div><button type="button" class="chip ${on ? '' : 'on'}" id="locTgl">${on ? 'Matikan' : 'Aktifkan'}</button></div>`;
-}
-function locToggle() {
-  if (locOn()) { ls.set('hub-loc', '0'); locStop(); api({ a: 'locoff' }); }
-  else { ls.set('hub-loc', '1'); locStart(); }
-  render();
+  return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Pemantauan lokasi kerja</b><small>Selama jam kerja ${WATCH.from.replace(':', '.')}–${WATCH.to.replace(':', '.')} WIB, lokasi GPS ponselmu terlihat oleh admin saat aplikasi terbuka. Di luar jam itu tidak dipantau.</small></div></div>`;
 }
 const fmtDist = m => m < 1000 ? m + ' m' : (m / 1000).toFixed(1) + ' km';
 const locAgo = (ts, now) => { const m = Math.round(Math.max(0, now - ts) / 60000); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : fmtDT(ts); };
@@ -911,7 +893,7 @@ function locClose() { clearInterval(locT); locT = null; if (locMap) { try { locM
 async function locSheet() {
   const sh = $('#sheet'); sh.hidden = false; locClose(); locFit = true;
   sh.innerHTML = `<div class="sh"><h3>Lokasi Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
-    <p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Posisi terakhir dari GPS ponsel karyawan yang mengaktifkan <b>Bagikan lokasi</b>. Diperbarui ±30 detik sekali selama aplikasi mereka terbuka; jika aplikasi ditutup, yang tampil adalah posisi terakhir.</p>
+    <p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Posisi GPS ponsel karyawan, <b>hanya dipantau pada jam kerja 08.00–16.00 WIB</b>. Diperbarui ±30 detik sekali selama aplikasi karyawan terbuka; jika aplikasi ditutup, yang tampil adalah posisi terakhir.</p>
     <div id="lmap" class="lmap"></div><div id="lsum"></div><div id="llist"><div class="empty">Memuat…</div></div></div>`;
   sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) { sh.hidden = true; locClose(); } };
   loadLeaflet(ok => {
@@ -938,11 +920,20 @@ function locMarks() {
 async function locLoad() {
   const r = await api({ a: 'loclist' }), el = $('#llist'); if (!el) return;
   if (!r || r.type !== 'loclist') { el.innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; return; }
-  locData = r.list.map(x => ({ ...x, fresh: r.now - x.ts <= 600000, now: r.now }));
-  const live = locData.filter(x => x.fresh).length;
-  $('#lsum').innerHTML = `<div class="sec" style="margin:12px 0 0"><h3 class="h" style="font-size:14px">${locData.length} dari ${r.total} karyawan terlacak · ${live} aktif</h3><button type="button" class="chip" id="lref">Segarkan</button></div>`;
-  el.innerHTML = locData.map(x => `<div class="li" data-lf="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}<br>${x.dist <= r.office.r ? 'Di area kantor' : fmtDist(x.dist) + ' dari kantor'}${x.acc != null ? ' · ±' + Math.round(x.acc) + ' m' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a></div>`).join('')
-    || '<div class="empty">Belum ada lokasi. Karyawan perlu membuka aplikasi dan menyetujui berbagi lokasi.</div>';
+  if (r.off) {
+    locData = []; locMarks(); $('#lsum').innerHTML = '';
+    el.innerHTML = `<div class="empty">Di luar jam pemantauan (${r.watch.from.replace(':', '.')}–${r.watch.to.replace(':', '.')} WIB). Lokasi karyawan tidak dipantau dan tidak ditampilkan.</div>`; return;
+  }
+  locData = r.list.map(x => ({ ...x, fresh: r.now - x.ts <= 600000, now: r.now, inside: x.dist <= r.office.r }));
+  const inn = locData.filter(x => x.inside).length, out = locData.length - inn, seen = new Set(locData.map(x => x.uid));
+  const none = [...users.values()].filter(u => !seen.has(u.id) && !u.admin).sort((a, b) => a.name.localeCompare(b.name));
+  $('#lsum').innerHTML = `<div class="sec" style="margin:12px 0 0"><h3 class="h" style="font-size:14px">${inn} di kantor · ${out} di luar · ${none.length} belum terdeteksi</h3><button type="button" class="chip" id="lref">Segarkan</button></div>`;
+  const pill = x => x.inside ? '<span class="pill" style="background:#ecfdf5;color:#047857">Di kantor</span>' : '<span class="pill" style="background:#fef2f2;color:var(--err)">Di luar kantor</span>';
+  const rows = [...locData].sort((a, b) => a.inside - b.inside || a.name.localeCompare(b.name));
+  el.innerHTML = rows.map(x => `<div class="li" data-lf="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)} ${pill(x)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}<br>${x.inside ? 'Di area kantor' : fmtDist(x.dist) + ' dari kantor'}${x.acc != null ? ' · ±' + Math.round(x.acc) + ' m' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a></div>`).join('')
+    + (none.length ? `<div class="sec" style="margin:14px 0 0"><h3 class="h" style="font-size:14px">Belum terdeteksi hari ini</h3></div><p style="margin:4px 0 6px;color:var(--ink2);font-size:12px;line-height:18px">Aplikasi belum dibuka, izin lokasi ditolak, atau GPS mati.</p>${none.map(u => `<div class="li">${av(u, 's')}<div><b>${esc(u.name)}</b><small>${esc(u.title)}</small></div></div>`).join('')}` : '')
+    || '';
+  if (!locData.length && !none.length) el.innerHTML = '<div class="empty">Belum ada data lokasi.</div>';
   locMarks();
 }
 function locFocus(uid) {
@@ -1059,7 +1050,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,#locAdm,#locTgl,#lref,[data-lf],[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,#locAdm,#lref,[data-lf],[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.asrc = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -1086,7 +1077,6 @@ document.addEventListener('click', e => {
   else if (t.id === 'locAdm') locSheet();
   else if (t.id === 'lref') locLoad();
   else if (t.dataset.lf) { if (!e.target.closest('a')) locFocus(t.dataset.lf); }
-  else if (t.id === 'locTgl') locToggle();
   else if (t.id === 'pin') pinSheet();
   else if (t.id === 'emp') empSheet();
   else if (t.id === 'cutiAdm') cutiSheet();
