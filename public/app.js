@@ -1,7 +1,7 @@
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { megaphone: 'M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM15 9.5a4 4 0 010 5M17.5 7a7.5 7.5 0 010 10', doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
+const P = { loc: 'M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21zM12 12a2.5 2.5 0 100-5 2.5 2.5 0 000 5z', megaphone: 'M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM15 9.5a4 4 0 010 5M17.5 7a7.5 7.5 0 010 10', doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', shield: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6zM9 12l2 2 4-4', cal: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z', phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1zM11 18.5h2', news: 'M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2zM18 9h2a1 1 0 011 1v8a2 2 0 01-2 2M8 8h7M8 12h7M8 16h4', clock: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', chat: 'M21 12a8 8 0 01-11.6 7.1L4 20l1-4.5A8 8 0 1121 12z', person: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6 8-6s8 2 8 6', search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5', bell: 'M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4', back: 'M15 5l-7 7 7 7', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', plus: 'M12 5v14M5 12h14', group: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M17 11a2.5 2.5 0 100-5M18 15c2 .4 3 2 3 5', chev: 'M9 5l7 7-7 7', pin: 'M12 17v5M8 3h8l-1 6 3 3H6l3-3z', out: 'M9 21H5V3h4M16 17l5-5-5-5M21 12H9', copy: 'M9 9h11v11H9zM5 15V4h11', close: 'M6 6l12 12M18 6L6 18', edit: 'M4 20h4L19 9l-4-4L4 16z', check: 'M5 12.5l4.5 4.5L19 7.5', upload: 'M12 16V4M7 9l5-5 5 5M4 20h16', file: 'M6 3h8l4 4v14H6zM14 3v5h5', eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z', link: 'M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' };
 const ic = (n, s = 24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 // Menu terakhir disimpan per tab browser: refresh tetap di menu yang sama, login baru selalu mulai dari Beranda
 const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
@@ -109,7 +109,7 @@ function handle(d) {
     since = Math.max(0, (d.maxId || 0) - 30); rsince = d.rnow || 0; ver = d.ver || 0;
     paintOff(); render(); if (open && $('#msgs')) { chatHead(); paintMsgs(); }
     if (!$('#detail').hidden) paintDetail(); const ai = $('#ainfo'); if (ai) ai.innerHTML = attInfo();
-    startPoll();
+    startPoll(); locSync();
   } else if (d.type === 'user') { users.set(d.user.id, d.user); render(); if (open) chatHead(); if (empPaint) empPaint(); }
   else if (d.type === 'msg') {
     const m = d.msg, ML = (msgs[m.conv] = msgs[m.conv] || []);
@@ -405,7 +405,7 @@ function renderHome() {
 
 function renderMe() {
   const u = users.get(me);
-  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${admin || helper ? adminMenu() : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
+  $('#main').innerHTML = `<div class="card prof">${av({ ...u, online: true }, 'xl', true)}<h2>${esc(u.name)}</h2><span class="pill">${esc(u.title)}</span><p>ID: KNT-${esc(me.slice(0, 4).toUpperCase())}</p><button class="btn sec2 sm" id="pin">${ic('edit', 16)}Ubah PIN</button></div>${devCard()}${locCard()}${admin || helper ? adminMenu() : ''}${pinChanged ? '' : '<div class="banner">Kamu masih memakai PIN bawaan. Ubah PIN lewat tombol di atas agar akunmu aman.</div>'}
     <button class="btn out" id="logout">${ic('out', 20)}Keluar Akun</button><div class="ver">Portal Hub 1.0 · Mekar Jaya Sentosa</div>`;
 }
 
@@ -497,7 +497,7 @@ function showSetPin() {
   eyeBind(el);
   const ins = [...el.querySelectorAll('.pi')]; ins[0].focus();
   ins.forEach(i => i.oninput = () => { i.value = i.value.replace(/\D/g, ''); });
-  $('#lo').onclick = () => { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); };
+  $('#lo').onclick = () => { locStop(); send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); };
   $('#pnf').onsubmit = e => {
     e.preventDefault(); const v = ins.map(i => i.value), old = needOld ? v[0] : lastPin, b = v[needOld ? 1 : 0], c = v[needOld ? 2 : 1];
     if (needOld && old.length !== 6) return pinErr('PIN saat ini terdiri dari 6 angka.');
@@ -861,8 +861,98 @@ function annSheet() {
   };
   api({ a: 'annlist' }).then(r => { if (r && r.type === 'annlist') annPaint(r.list); else if ($('#alist')) $('#alist').innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; });
 }
+
+// ---------- Lokasi karyawan (GPS ponsel) ----------
+// Karyawan: lokasi dikirim ±30 detik sekali HANYA saat aplikasi terbuka dan setelah ia setuju (bisa dimatikan di Profil).
+// Admin utama: Profil › Menu Admin › Lokasi Karyawan menampilkan posisi terakhir di peta + daftar.
+let locW = null, locPos = null, locLast = 0, locAsked = false, locMap = null, locLayer = null, locT = null, locData = [], locFit = true;
+const locOn = () => ls.get('hub-loc') === '1';
+const locOk = () => !!navigator.geolocation && window.isSecureContext !== false;
+function locSync() {
+  if (!authed || !pinChanged || !locOk()) return;
+  const v = ls.get('hub-loc');
+  if (v === '1') return locStart();
+  if (v === null && !locAsked) {
+    locAsked = true;
+    setTimeout(() => {
+      if (!authed) return;
+      if (confirm('Bagikan lokasi ponselmu ke admin?\n\nLokasi hanya dikirim saat aplikasi terbuka dan bisa dimatikan kapan saja lewat Profil.')) { ls.set('hub-loc', '1'); locStart(); } else ls.set('hub-loc', '0');
+      if (tab === 'me') render();
+    }, 1500);
+  }
+}
+function locStart() {
+  if (locW != null || !locOk()) return;
+  locW = navigator.geolocation.watchPosition(p => { locPos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }; locPush(); },
+    e => { if (e.code === 1) { ls.set('hub-loc', '0'); locStop(); if (tab === 'me') render(); } },
+    { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
+}
+function locStop() { if (locW != null) navigator.geolocation.clearWatch(locW); locW = null; locPos = null; }
+function locPush(force) {
+  if (!locPos || !authed || document.hidden || !locOn()) return;
+  const n = Date.now(); if (!force && n - locLast < 30000) return; locLast = n;
+  api({ a: 'locping', ...locPos });
+}
+setInterval(() => locPush(), 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) locPush(true); });
+function locCard() {
+  if (!locOk()) return '';
+  const on = locOn();
+  return `<div class="card li" style="padding:14px 20px"><span class="ic ${on ? 'ok' : ''}">${ic('loc', 20)}</span><div><b>Bagikan lokasi ke admin</b><small>${on ? 'Aktif · dikirim saat aplikasi terbuka' : 'Nonaktif'}</small></div><button type="button" class="chip ${on ? '' : 'on'}" id="locTgl">${on ? 'Matikan' : 'Aktifkan'}</button></div>`;
+}
+function locToggle() {
+  if (locOn()) { ls.set('hub-loc', '0'); locStop(); api({ a: 'locoff' }); }
+  else { ls.set('hub-loc', '1'); locStart(); }
+  render();
+}
+const fmtDist = m => m < 1000 ? m + ' m' : (m / 1000).toFixed(1) + ' km';
+const locAgo = (ts, now) => { const m = Math.round(Math.max(0, now - ts) / 60000); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : fmtDT(ts); };
+function locClose() { clearInterval(locT); locT = null; if (locMap) { try { locMap.remove(); } catch {} } locMap = null; locLayer = null; }
+async function locSheet() {
+  const sh = $('#sheet'); sh.hidden = false; locClose(); locFit = true;
+  sh.innerHTML = `<div class="sh"><h3>Lokasi Karyawan<button type="button" class="icon-btn" id="xs" aria-label="Tutup">${ic('close')}</button></h3>
+    <p style="margin:0 0 10px;color:var(--ink2);font-size:13px;line-height:20px">Posisi terakhir dari GPS ponsel karyawan yang mengaktifkan <b>Bagikan lokasi</b>. Diperbarui ±30 detik sekali selama aplikasi mereka terbuka; jika aplikasi ditutup, yang tampil adalah posisi terakhir.</p>
+    <div id="lmap" class="lmap"></div><div id="lsum"></div><div id="llist"><div class="empty">Memuat…</div></div></div>`;
+  sh.onclick = e => { if (e.target === sh || e.target.closest('#xs')) { sh.hidden = true; locClose(); } };
+  loadLeaflet(ok => {
+    const el = $('#lmap'); if (!el) return;
+    if (!ok) { el.remove(); return; }
+    locMap = L.map(el, { zoomControl: true }).setView([office.lat, office.lng], 16);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(locMap);
+    L.circle([office.lat, office.lng], { radius: office.r, color: '#1F55C8', weight: 1.5, fillOpacity: .12 }).addTo(locMap);
+    L.marker([office.lat, office.lng], { icon: L.divIcon({ className: '', html: '<div class="mpin"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: false }).addTo(locMap);
+    locLayer = L.layerGroup().addTo(locMap); setTimeout(() => { if (locMap) { locMap.invalidateSize(); locMarks(); } }, 150);
+  });
+  locT = setInterval(() => { const s = $('#sheet'); if (!$('#lmap') && !$('#llist') || !s || s.hidden) return locClose(); locLoad(); }, 15000);
+  await locLoad();
+}
+function locMarks() {
+  if (!locMap || !locLayer) return; locLayer.clearLayers();
+  const pts = [[office.lat, office.lng]];
+  for (const x of locData) {
+    pts.push([x.lat, x.lng]);
+    L.marker([x.lat, x.lng], { icon: L.divIcon({ className: '', html: `<div class="lpin ${x.fresh ? '' : 'old'}">${esc(ini(x.name))}</div>`, iconSize: [32, 32], iconAnchor: [16, 16] }) }).bindPopup(`<b>${esc(x.name)}</b><br>${esc(x.title)}`).addTo(locLayer);
+  }
+  if (locFit && locData.length) { locFit = false; locMap.fitBounds(pts, { padding: [30, 30], maxZoom: 17 }); }
+}
+async function locLoad() {
+  const r = await api({ a: 'loclist' }), el = $('#llist'); if (!el) return;
+  if (!r || r.type !== 'loclist') { el.innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; return; }
+  locData = r.list.map(x => ({ ...x, fresh: r.now - x.ts <= 600000, now: r.now }));
+  const live = locData.filter(x => x.fresh).length;
+  $('#lsum').innerHTML = `<div class="sec" style="margin:12px 0 0"><h3 class="h" style="font-size:14px">${locData.length} dari ${r.total} karyawan terlacak · ${live} aktif</h3><button type="button" class="chip" id="lref">Segarkan</button></div>`;
+  el.innerHTML = locData.map(x => `<div class="li" data-lf="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}<br>${x.dist <= r.office.r ? 'Di area kantor' : fmtDist(x.dist) + ' dari kantor'}${x.acc != null ? ' · ±' + Math.round(x.acc) + ' m' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a></div>`).join('')
+    || '<div class="empty">Belum ada lokasi. Karyawan perlu membuka aplikasi dan menyetujui berbagi lokasi.</div>';
+  locMarks();
+}
+function locFocus(uid) {
+  const x = locData.find(v => v.uid === uid); if (!x || !locMap) return;
+  const m = $('#lmap'); if (m) m.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  locMap.flyTo([x.lat, x.lng], 18);
+  locLayer.eachLayer(l => { const ll = l.getLatLng && l.getLatLng(); if (ll && Math.abs(ll.lat - x.lat) < 1e-9 && Math.abs(ll.lng - x.lng) < 1e-9) l.openPopup(); });
+}
 function adminMenu() {
-  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announce', '#0891B2', '#E0F7FA']];
+  const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announce', '#0891B2', '#E0F7FA'], ['locAdm', 'loc', 'Lokasi Karyawan', '#E11D48', '#FFE4E9']];
   const items = admin ? all : all.filter(i => ['cutiAdm', 'attAdm'].includes(i[0])); // admin pembantu: hanya Data Cuti dan Data Absensi
   return `<div class="card" style="padding:16px 12px 10px"><h3 class="h" style="font-size:16px;margin:0 6px 12px">${admin ? 'Menu Admin' : 'Menu Admin Data'}</h3><div class="mgrid">${items.map(([id, i, l, c, bg]) =>
     `<button class="mi" id="${id}"><span class="mic" style="background:${bg};color:${c}">${ic(i, 26)}${id === 'devAdm' && devPending ? `<i class="mb">${devPending}</i>` : ''}</span><span class="ml">${l}</span></button>`).join('')}</div></div>`;
@@ -969,7 +1059,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,#locAdm,#locTgl,#lref,[data-lf],[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.asrc = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -993,6 +1083,10 @@ document.addEventListener('click', e => {
   else if (t.dataset.ann) annView(+t.dataset.ann);
   else if (t.dataset.annx) { if (confirm('Hapus pengumuman ini?')) annDel(t.dataset.annx); }
   else if (t.id === 'annAdm') annSheet();
+  else if (t.id === 'locAdm') locSheet();
+  else if (t.id === 'lref') locLoad();
+  else if (t.dataset.lf) { if (!e.target.closest('a')) locFocus(t.dataset.lf); }
+  else if (t.id === 'locTgl') locToggle();
   else if (t.id === 'pin') pinSheet();
   else if (t.id === 'emp') empSheet();
   else if (t.id === 'cutiAdm') cutiSheet();
