@@ -264,15 +264,22 @@ function renderNews(force) {
 function renderChat() {
   const main = $('#main');
   if (!$('#q')) {
+    fmClose();
     main.innerHTML = `<div class="search">${ic('search', 20)}<input id="q" type="search" placeholder="Cari rekan kerja atau divisi..." value="${esc(q)}"></div>
-      <div class="chips" id="chips"></div><div class="sec"><h2><i></i>Rekan Kerja Online</h2><span id="onc"></span></div><div class="strip" id="strip"></div>
-      <div class="sec" style="margin-top:12px"><h3 class="h">Percakapan</h3></div><div class="threads" id="threads"></div>
+      <div class="chips" id="chips"></div><div id="cbody"><div class="sec"><h2><i></i>Rekan Kerja Online</h2><span id="onc"></span></div><div class="strip" id="strip"></div>
+      <div class="sec" style="margin-top:12px"><h3 class="h">Percakapan</h3></div><div class="threads" id="threads"></div></div>
+      <div id="fpanel" style="display:none"><div class="card li" style="margin-top:12px;padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Share ke teman</b><small id="fsSub">Memuat…</small></div><button type="button" class="sw" id="fsTgl" role="switch" aria-checked="false" aria-label="Share ke teman"></button></div>
+        <div id="fmapbox" class="lmap" style="margin-top:12px;height:300px;display:none"></div><div id="flist"></div></div>
       <div class="fab"><button id="new">${ic('plus', 20)}Pesan Baru</button></div>`;
     $('#q').oninput = e => { q = e.target.value; renderChat(); };
   }
   const un = totalUnread();
-  const chips = [['all', 'Semua'], ['unread', 'Belum Dibaca'], ['group', 'Grup'], ['online', 'Online']];
+  const chips = [['all', 'Semua'], ['unread', 'Belum Dibaca'], ['group', 'Grup'], ['online', 'Online'], ['map', 'Peta']];
   $('#chips').innerHTML = chips.map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${esc(k)}">${l}${k === 'unread' && un ? `<b>${un}</b>` : ''}</button>`).join('');
+  const isMap = filter === 'map', fab = main.querySelector('.fab');
+  $('#cbody').style.display = isMap ? 'none' : ''; $('#fpanel').style.display = isMap ? '' : 'none';
+  main.querySelector('.search').style.display = isMap ? 'none' : ''; if (fab) fab.style.display = isMap ? 'none' : '';
+  if (isMap) { fmStart(); return; } fmStop();
   const on = [...users.values()].filter(x => x.online && x.id !== me);
   $('#onc').textContent = on.length + ' Aktif';
   $('#strip').innerHTML = on.length ? on.map(x => `<button class="pp" data-u="${x.id}">${av(x, '', true)}<b>${esc(short(x.name))}</b><small>${esc(x.title)}</small></button>`).join('')
@@ -497,7 +504,7 @@ function showSetPin() {
   eyeBind(el);
   const ins = [...el.querySelectorAll('.pi')]; ins[0].focus();
   ins.forEach(i => i.oninput = () => { i.value = i.value.replace(/\D/g, ''); });
-  $('#lo').onclick = () => { locStop(); send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); };
+  $('#lo').onclick = () => { locStop(); fsOn = false; fmStop(); send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); };
   $('#pnf').onsubmit = e => {
     e.preventDefault(); const v = ins.map(i => i.value), old = needOld ? v[0] : lastPin, b = v[needOld ? 1 : 0], c = v[needOld ? 2 : 1];
     if (needOld && old.length !== 6) return pinErr('PIN saat ini terdiri dari 6 angka.');
@@ -865,24 +872,26 @@ function annSheet() {
 // ---------- Lokasi karyawan (GPS ponsel) ----------
 // Karyawan: lokasi dikirim otomatis ±30 detik sekali HANYA pada jam kerja (08.00-16.00 WIB) dan hanya saat aplikasi terbuka; karyawan diberi tahu di Profil.
 // Admin utama: Profil › Menu Admin › Lokasi Karyawan menampilkan posisi terakhir di peta + status di kantor / di luar kantor.
-let locW = null, locPos = null, locLast = 0, locMap = null, locLayer = null, locT = null, locData = [], locFit = true;
+let fsOn = false, locDenied = false, fmMap = null, fmLayer = null, fmT = null, fmData = [], fmFit = true, locW = null, locPos = null, locLast = 0, locMap = null, locLayer = null, locT = null, locData = [], locFit = true;
 const WATCH = { from: '08:00', to: '16:00' };
 const locOk = () => !!navigator.geolocation && window.isSecureContext !== false;
 const locHours = () => { const h = new Date(Date.now() + 7 * 36e5).toISOString().slice(11, 16); return h >= WATCH.from && h < WATCH.to; };
-function locSync() { if (authed && pinChanged && locOk()) locStart(); }
+function locSync() { if (authed && pinChanged) api({ a: 'fslist' }).then(r => { if (r && r.type === 'fslist') fsOn = r.on; locEnsure(); }); }
+function locEnsure() { if (!authed || !pinChanged || !locOk() || !(locHours() || fsOn)) return locStop(); locStart(); } // GPS hanya menyala bila perlu (hemat baterai)
 function locStart() {
   if (locW != null || !locOk()) return;
-  locW = navigator.geolocation.watchPosition(p => { locPos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }; locPush(); },
-    e => {},
+  locW = navigator.geolocation.watchPosition(p => { const first = !locPos; locPos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }; locDenied = false; locPush(first); },
+    e => { if (e.code === 1) { locDenied = true; if (fmT) fmPaint(); } },
     { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
 }
 function locStop() { if (locW != null) navigator.geolocation.clearWatch(locW); locW = null; locPos = null; }
 function locPush(force) {
-  if (!locPos || !authed || document.hidden || !locHours()) return;
+  if (!locPos || !authed || document.hidden) return;
   const n = Date.now(); if (!force && n - locLast < 30000) return; locLast = n;
-  api({ a: 'locping', ...locPos });
+  if (locHours()) api({ a: 'locping', ...locPos }); // pemantauan kerja (admin), hanya 08.00-16.00
+  if (fsOn) api({ a: 'fsping', ...locPos }); // share ke teman, hanya bila tombolnya nyala
 }
-setInterval(() => locPush(), 30000);
+setInterval(() => { locEnsure(); locPush(); }, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) locPush(true); });
 function locCard() {
   return `<div class="card li" style="padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Pemantauan lokasi kerja</b><small>Patuhi aturan selama jam kerja, dilarang meninggalkan lokasi kerja tanpa izin dan persetujuan HR.</small></div></div>`;
@@ -941,6 +950,62 @@ function locFocus(uid) {
   const m = $('#lmap'); if (m) m.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   locMap.flyTo([x.lat, x.lng], 18);
   locLayer.eachLayer(l => { const ll = l.getLatLng && l.getLatLng(); if (ll && Math.abs(ll.lat - x.lat) < 1e-9 && Math.abs(ll.lng - x.lng) < 1e-9) l.openPopup(); });
+}
+
+// ---------- Peta teman (tab Peta di Obrolan) ----------
+// Tombol "Share ke teman" harus NYALA agar posisi teman dan posisimu tampil. Jika mati, tidak ada posisi yang tampil/terlihat.
+function fmStart() { if (fmT) return; fmFit = true; fmLoad(); fmT = setInterval(() => { if (tab !== 'chat' || filter !== 'map' || !$('#fmapbox')) return fmStop(); fmLoad(); }, 15000); }
+function fmStop() { clearInterval(fmT); fmT = null; }
+function fmClose() { fmStop(); if (fmMap) { try { fmMap.remove(); } catch {} } fmMap = null; fmLayer = null; }
+async function fmLoad() {
+  const r = await api({ a: 'fslist' }); if (!$('#fpanel') || filter !== 'map') return;
+  if (!r || r.type !== 'fslist') { const l = $('#flist'); if (l && !fmData.length) l.innerHTML = '<div class="empty">Gagal memuat. Coba lagi.</div>'; return; }
+  fsOn = r.on; fmData = r.list.map(x => { const mine = x.me && locPos; return { ...x, ...(mine ? { lat: locPos.lat, lng: locPos.lng, acc: locPos.acc, ts: r.now } : {}), now: r.now, fresh: r.now - (mine ? r.now : x.ts) <= 600000 }; });
+  locEnsure(); fmPaint();
+}
+function fmPaint() {
+  const sw = $('#fsTgl'); if (!sw) return;
+  sw.classList.toggle('on', fsOn); sw.setAttribute('aria-checked', String(fsOn));
+  $('#fsSub').textContent = fsOn ? (locDenied ? 'Nyala, tetapi izin lokasi ditolak di ponsel ini. Aktifkan izin lokasi di pengaturan browser.' : 'Nyala · posisimu terlihat oleh teman yang juga menyalakan share') : 'Mati · posisi teman dan posisimu tidak ditampilkan';
+  const box = $('#fmapbox'), list = $('#flist');
+  if (!fsOn) { box.style.display = 'none'; fmClose(); list.innerHTML = '<div class="empty">Nyalakan <b>Share ke teman</b> untuk melihat posisi teman di peta. Posisimu juga hanya terlihat oleh teman yang menyalakan share.</div>'; return; }
+  box.style.display = '';
+  const my = fmData.find(x => x.me), friends = fmData.filter(x => !x.me).sort((a, b) => b.fresh - a.fresh || a.name.localeCompare(b.name));
+  list.innerHTML = (my ? '' : '<div class="empty" style="margin-top:12px">Mencari posisimu… pastikan GPS aktif dan izinkan akses lokasi.</div>')
+    + `<div class="sec" style="margin:12px 0 0"><h3 class="h" style="font-size:14px">${friends.length} teman membagikan lokasi</h3><button type="button" class="chip" id="fmref">Segarkan</button></div>`
+    + (friends.length ? friends.map(x => { const d = my ? Math.round(gDist(my.lat, my.lng, x.lat, x.lng)) : null; return `<div class="li" data-ff="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}${d != null ? '<br>' + fmtDist(d) + ' darimu' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a><button type="button" class="chip" data-u="${x.uid}">Obrol</button></div>`; }).join('')
+      : '<div class="empty">Belum ada teman yang menyalakan share. Teman hanya muncul jika tombol Share ke teman miliknya juga nyala.</div>');
+  fmInit(fmMarks);
+}
+function fmInit(cb) {
+  if (fmMap) { fmMap.invalidateSize(); return cb(); }
+  loadLeaflet(ok => {
+    const el = $('#fmapbox'); if (!el || fmMap) return;
+    if (!ok) { el.style.display = 'none'; return; }
+    fmMap = L.map(el, { zoomControl: true }).setView([office.lat, office.lng], 16);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(fmMap);
+    fmLayer = L.layerGroup().addTo(fmMap); setTimeout(() => { if (fmMap) { fmMap.invalidateSize(); cb(); } }, 150);
+  });
+}
+function fmMarks() {
+  if (!fmMap || !fmLayer || !fsOn) return; fmLayer.clearLayers(); const pts = [];
+  for (const x of fmData) {
+    pts.push([x.lat, x.lng]);
+    L.marker([x.lat, x.lng], { icon: L.divIcon({ className: '', html: `<div class="lpin ${x.me ? 'me' : x.fresh ? '' : 'old'}">${x.me ? 'Aku' : esc(ini(x.name))}</div>`, iconSize: [32, 32], iconAnchor: [16, 16] }) }).bindPopup(`<b>${x.me ? 'Kamu' : esc(x.name)}</b><br>${esc(x.title)}`).addTo(fmLayer);
+  }
+  if (fmFit && pts.length) { fmFit = false; pts.length > 1 ? fmMap.fitBounds(pts, { padding: [40, 40], maxZoom: 17 }) : fmMap.setView(pts[0], 17); }
+}
+function fmFocus(uid) {
+  const x = fmData.find(v => v.uid === uid); if (!x || !fmMap) return;
+  const m = $('#fmapbox'); if (m) m.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  fmMap.flyTo([x.lat, x.lng], 18);
+  fmLayer.eachLayer(l => { const ll = l.getLatLng && l.getLatLng(); if (ll && Math.abs(ll.lat - x.lat) < 1e-9 && Math.abs(ll.lng - x.lng) < 1e-9) l.openPopup(); });
+}
+async function fsToggle() {
+  fsOn = !fsOn; fmFit = true; fmPaint(); // tampilan langsung berubah
+  await api({ a: fsOn ? 'fson' : 'fsoff' });
+  locEnsure(); if (fsOn) locPush(true);
+  fmLoad();
 }
 function adminMenu() {
   const all = [['emp', 'group', 'Kelola Karyawan', '#1F55C8', '#E8F0FE'], ['cutiAdm', 'cal', 'Data Cuti', '#059669', '#E6F7F0'], ['attAdm', 'clock', 'Data Absensi', '#D97706', '#FEF3E2'], ['devAdm', 'phone', 'Perangkat Karyawan', '#7C3AED', '#F1EAFE'], ['admAdm', 'shield', 'Kelola Admin', '#DB2777', '#FDE8F3'], ['annAdm', 'megaphone', 'Announce', '#0891B2', '#E0F7FA'], ['locAdm', 'loc', 'Lokasi Karyawan', '#E11D48', '#FFE4E9']];
@@ -1050,7 +1115,7 @@ function newSheet() {
 
 // ---------- event ----------
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,#locAdm,#lref,[data-lf],[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
+  const t = e.target.closest('[data-tab],[data-f],[data-u],[data-c],[data-go],#topback,[data-q],[data-att],[data-ak],[data-am],[data-ns],[data-nc],[data-as],[data-sort],#adreset,#new,#pin,#emp,#cutiAdm,#attAdm,#devAdm,#admAdm,#annAdm,#locAdm,#fsTgl,#fmref,[data-ff],#lref,[data-lf],[data-ann],[data-annx],[data-hl],#dvall,[data-dva],[data-dvr],#logout,#bell,#meBtn');
   if (!t) return;
   if (t.dataset.as) { attSrc = t.dataset.as; useAtt(true); $('#main').dataset.asrc = ''; renderAtt(); $('#main').scrollTop = 0; return; }
   if (t.dataset.ns) { newsSrc = t.dataset.ns; renderNews(true); return; }
@@ -1075,6 +1140,9 @@ document.addEventListener('click', e => {
   else if (t.dataset.annx) { if (confirm('Hapus pengumuman ini?')) annDel(t.dataset.annx); }
   else if (t.id === 'annAdm') annSheet();
   else if (t.id === 'locAdm') locSheet();
+  else if (t.id === 'fsTgl') fsToggle();
+  else if (t.id === 'fmref') fmLoad();
+  else if (t.dataset.ff) { if (!e.target.closest('a')) fmFocus(t.dataset.ff); }
   else if (t.id === 'lref') locLoad();
   else if (t.dataset.lf) { if (!e.target.closest('a')) locFocus(t.dataset.lf); }
   else if (t.id === 'pin') pinSheet();
@@ -1089,7 +1157,7 @@ document.addEventListener('click', e => {
   else if (t.dataset.dvr) { if (confirm('Cabut/tolak perangkat ini?')) devLoad({ a: 'devrevoke', uid: t.dataset.dvr.split('|')[0], dh: t.dataset.dvr.split('|')[1] }); }
   else if (t.id === 'bell') { tab = 'chat'; filter = 'unread'; render(); }
   else if (t.id === 'meBtn') { tab = 'me'; render(); }
-  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); }
+  else if (t.id === 'logout' && confirm('Keluar dari akun ini di perangkat ini?')) { locStop(); fsOn = false; fmStop(); send({ type: 'logout' }).finally(() => { ls.del('hub-session'); ss.del('hub-tab'); location.reload(); }); }
 });
 
 // ---------- Tombol Back di HP: tutup lapisan teratas / kembali ke menu sebelumnya, bukan menutup aplikasi ----------
