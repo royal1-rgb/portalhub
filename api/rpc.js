@@ -115,7 +115,7 @@ async function route(d, ip, ctx) {
     case 'poll': return poll(uid, d);
     case 'logout': // riwayat obrolan tidak disimpan: hapus pesan yang dikirim user ini dan semua obrolan pribadinya
       await q('DELETE FROM sessions WHERE hash = $1', [hash]);
-      await q('DELETE FROM locations WHERE uid = $1', [uid]);
+      await q('DELETE FROM locations WHERE uid = $1', [uid]); await q('DELETE FROM fshare WHERE uid = $1', [uid]);
       await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await q("DELETE FROM reads WHERE uid = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [uid]);
       await bumpVer(); return { type: 'bye' };
@@ -173,6 +173,23 @@ async function route(d, ip, ctx) {
       if (!L.inWatch(t)) return { ...base, off: true, list: [], total: Object.keys(db.users).length };
       const today = L.wib(t).d, rows = (await q('SELECT uid, lat, lng, acc, ts FROM locations ORDER BY ts DESC')).rows.filter(r => db.users[r.uid] && L.wib(r.ts).d === today);
       return { ...base, off: false, list: rows.map(r => ({ uid: r.uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts), dist: Math.round(L.distM(r.lat, r.lng, O.lat, O.lng)) })), total: Object.keys(db.users).length };
+    }
+    // ---- Share lokasi ke teman (sukarela, dua arah): baris di fshare = tombol "Share ke teman" NYALA.
+    // Siapa pun yang tombolnya mati tidak muncul di peta orang lain DAN tidak bisa melihat posisi siapa pun.
+    case 'fson': await q('INSERT INTO fshare (uid, ts) VALUES ($1, $2) ON CONFLICT (uid) DO NOTHING', [uid, t]); return { type: 'noop' };
+    case 'fsoff': await q('DELETE FROM fshare WHERE uid = $1', [uid]); return { type: 'noop' };
+    case 'fsping': { // hanya memperbarui jika share sedang nyala (tidak bisa "memaksa" nyala dari sini)
+      const lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc);
+      if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { type: 'noop' };
+      await q('UPDATE fshare SET lat = $2, lng = $3, acc = $4, ts = $5 WHERE uid = $1', [uid, lat, lng, isFinite(acc) ? acc : null, t]);
+      return { type: 'noop' };
+    }
+    case 'fslist': {
+      const db = await getDb(true);
+      await q('DELETE FROM fshare WHERE ts < $1', [t - 36e5 * 12]); // share mati otomatis jika 12 jam tidak ada update
+      const rows = (await q('SELECT uid, lat, lng, acc, ts FROM fshare')).rows;
+      if (!rows.some(r => r.uid === uid)) return { type: 'fslist', on: false, now: t, list: [] }; // tombol mati: tidak melihat siapa pun
+      return { type: 'fslist', on: true, now: t, list: rows.filter(r => r.lat != null && db.users[r.uid]).map(r => ({ uid: r.uid, me: r.uid === uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts) })) };
     }
     case 'checkin': case 'checkout': {
       const out = d.a === 'checkout', E = msg => ({ type: out ? 'checkout_err' : 'checkin_err', msg }), lat = Number(d.lat), lng = Number(d.lng), acc = Number(d.acc), O = L.OFFICE;
@@ -236,7 +253,7 @@ async function route(d, ip, ctx) {
           delete db.users[tg.id]; (db.deleted = db.deleted || {})[tg.id] = 1; // penanda agar tidak dibuat ulang dari employees.json
           if (db.cuti) { if (db.cuti.rows) delete db.cuti.rows[tg.id]; if (db.cuti.quotas) delete db.cuti.quotas[tg.id]; }
           await q('DELETE FROM sessions WHERE uid = $1', [tg.id]); await q('DELETE FROM presence WHERE uid = $1', [tg.id]);
-          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]); await q('DELETE FROM checkins WHERE uid = $1', [tg.id]); await q('DELETE FROM locations WHERE uid = $1', [tg.id]);
+          await q('DELETE FROM reads WHERE uid = $1', [tg.id]); await q('DELETE FROM attendance WHERE uid = $1', [tg.id]); await q('DELETE FROM checkins WHERE uid = $1', [tg.id]); await q('DELETE FROM locations WHERE uid = $1', [tg.id]); await q('DELETE FROM fshare WHERE uid = $1', [tg.id]);
           await q("DELETE FROM messages WHERE frm = $1 OR (conv LIKE 'd:%' AND strpos(conv, $1) > 0)", [tg.id]);
           return { type: 'emp_del', id: tg.id, name: tg.name, changed: 1 };
         }
