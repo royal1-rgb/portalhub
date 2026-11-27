@@ -268,7 +268,7 @@ function renderChat() {
     main.innerHTML = `<div class="search">${ic('search', 20)}<input id="q" type="search" placeholder="Cari rekan kerja atau divisi..." value="${esc(q)}"></div>
       <div class="chips" id="chips"></div><div id="cbody"><div class="sec"><h2><i></i>Rekan Kerja Online</h2><span id="onc"></span></div><div class="strip" id="strip"></div>
       <div class="sec" style="margin-top:12px"><h3 class="h">Percakapan</h3></div><div class="threads" id="threads"></div></div>
-      <div id="fpanel" style="display:none"><div class="card li" style="margin-top:12px;padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Share ke teman</b><small id="fsSub">Memuat…</small></div><button type="button" class="sw" id="fsTgl" role="switch" aria-checked="false" aria-label="Share ke teman"></button></div>
+      <div id="fpanel" style="display:none"><div class="card li" style="margin-top:12px;padding:14px 20px"><span class="ic">${ic('loc', 20)}</span><div><b>Share ke teman</b><small id="fsSub"></small></div><button type="button" class="sw" id="fsTgl" role="switch" aria-checked="false" aria-label="Share ke teman"></button></div>
         <div id="fmapbox" class="lmap" style="margin-top:12px;height:300px;display:none"></div><div id="flist"></div></div>
       <div class="fab"><button id="new">${ic('plus', 20)}Pesan Baru</button></div>`;
     $('#q').oninput = e => { q = e.target.value; renderChat(); };
@@ -966,7 +966,7 @@ async function fmLoad() {
 function fmPaint() {
   const sw = $('#fsTgl'); if (!sw) return;
   sw.classList.toggle('on', fsOn); sw.setAttribute('aria-checked', String(fsOn));
-  $('#fsSub').textContent = fsOn ? (locDenied ? 'Nyala, tetapi izin lokasi ditolak di ponsel ini. Aktifkan izin lokasi di pengaturan browser.' : 'Nyala · posisimu terlihat oleh teman yang juga menyalakan share') : 'Mati · posisi teman dan posisimu tidak ditampilkan';
+  $('#fsSub').textContent = fsOn && locDenied ? 'Izin lokasi ditolak di ponsel ini. Aktifkan izin lokasi di pengaturan browser.' : ''; // hanya muncul bila ada masalah izin
   const box = $('#fmapbox'), list = $('#flist');
   if (!fsOn) { box.style.display = 'none'; fmClose(); list.innerHTML = '<div class="empty">Nyalakan <b>Share ke teman</b> untuk melihat posisi teman di peta. Posisimu juga hanya terlihat oleh teman yang menyalakan share.</div>'; return; }
   box.style.display = '';
