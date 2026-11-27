@@ -294,3 +294,5 @@ nav.noanim,nav.noanim *{transition:none!important}
 .lmap{height:240px;border-radius:16px;overflow:hidden;background:var(--c-low);isolation:isolate;position:relative;z-index:0}
 .lpin{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:grid;place-items:center;font:700 11px/1 var(--ff)}.lpin.old{background:#94a3b8}
 .li a.chip{flex:none;text-decoration:none}
+.lpin.me{background:#059669}
+.sw{position:relative;flex:none;width:50px;height:30px;border-radius:15px;border:0;background:#cbd5e1;transition:background .2s;cursor:pointer}.sw::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.sw.on{background:var(--primary)}.sw.on::after{left:23px}
