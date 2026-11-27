@@ -186,7 +186,8 @@ async function route(d, ip, ctx) {
     }
     case 'fslist': {
       const db = await getDb(true);
-      await q('DELETE FROM fshare WHERE ts < $1', [t - 36e5 * 12]); // share mati otomatis jika 12 jam tidak ada update
+      const ttl = Number(process.env.FS_TTL_HOURS) || 0; // 0 = share nyala terus selama tombol nyala (tanpa batas jam); isi env FS_TTL_HOURS untuk kedaluwarsa otomatis
+      if (ttl > 0) await q('DELETE FROM fshare WHERE ts < $1', [t - 36e5 * ttl]);
       const rows = (await q('SELECT uid, lat, lng, acc, ts FROM fshare')).rows;
       if (!rows.some(r => r.uid === uid)) return { type: 'fslist', on: false, now: t, list: [] }; // tombol mati: tidak melihat siapa pun
       return { type: 'fslist', on: true, now: t, list: rows.filter(r => r.lat != null && db.users[r.uid]).map(r => ({ uid: r.uid, me: r.uid === uid, name: db.users[r.uid].name, title: db.users[r.uid].title, lat: r.lat, lng: r.lng, acc: r.acc == null ? null : Number(r.acc), ts: Number(r.ts) })) };
