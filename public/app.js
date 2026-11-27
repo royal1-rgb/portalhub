@@ -135,8 +135,8 @@ function paintOff() {
 }
 
 // ---------- render utama ----------
-const TITLES = { home: 'Beranda', chat: 'Pesan Dan Obrolan', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', izin: 'Izin Pulang', news: 'News Update', me: 'Profil Karyawan' };
-const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Obrolan'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
+const TITLES = { home: 'Beranda', chat: 'Pesan Dan Chat', att: 'Absensi Karyawan', cuti: 'Informasi Cuti', izin: 'Izin Pulang', news: 'News Update', me: 'Profil Karyawan' };
+const NAV = [['home', 'home', 'Beranda'], ['chat', 'chat', 'Chat'], ['news', 'news', 'News'], ['me', 'person', 'Profil']];
 // ---------- Liquid Floating Bar: blob cair (metaball) dengan fisika pegas ----------
 // Rasa gerakan menu: ganti LQ_FEEL dengan 'standar' | 'santai' | 'jelly'
 // Tiap pasangan [kekakuan, peredaman]: kekakuan besar = cepat; peredaman kecil = kenyal (melampaui tujuan lalu bergoyang)
@@ -952,7 +952,7 @@ function locFocus(uid) {
   locLayer.eachLayer(l => { const ll = l.getLatLng && l.getLatLng(); if (ll && Math.abs(ll.lat - x.lat) < 1e-9 && Math.abs(ll.lng - x.lng) < 1e-9) l.openPopup(); });
 }
 
-// ---------- Peta teman (tab Peta di Obrolan) ----------
+// ---------- Peta teman (tab Peta di Chat) ----------
 // Tombol "Share ke teman" harus NYALA agar posisi teman dan posisimu tampil. Jika mati, tidak ada posisi yang tampil/terlihat.
 function fmStart() { if (fmT) return; fmFit = true; fmLoad(); fmT = setInterval(() => { if (tab !== 'chat' || filter !== 'map' || !$('#fmapbox')) return fmStop(); fmLoad(); }, 15000); }
 function fmStop() { clearInterval(fmT); fmT = null; }
@@ -973,7 +973,7 @@ function fmPaint() {
   const my = fmData.find(x => x.me), friends = fmData.filter(x => !x.me).sort((a, b) => b.fresh - a.fresh || a.name.localeCompare(b.name));
   list.innerHTML = (my ? '' : '<div class="empty" style="margin-top:12px">Mencari posisimu… pastikan GPS aktif dan izinkan akses lokasi.</div>')
     + `<div class="sec" style="margin:12px 0 0"><h3 class="h" style="font-size:14px">${friends.length} teman membagikan lokasi</h3><button type="button" class="chip" id="fmref">Segarkan</button></div>`
-    + (friends.length ? friends.map(x => { const d = my ? Math.round(gDist(my.lat, my.lng, x.lat, x.lng)) : null; return `<div class="li" data-ff="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}${d != null ? '<br>' + fmtDist(d) + ' darimu' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a><button type="button" class="chip" data-u="${x.uid}">Obrol</button></div>`; }).join('')
+    + (friends.length ? friends.map(x => { const d = my ? Math.round(gDist(my.lat, my.lng, x.lat, x.lng)) : null; return `<div class="li" data-ff="${x.uid}" role="button" tabindex="0">${av({ id: x.uid, name: x.name, online: x.fresh }, 's', true)}<div><b>${esc(x.name)}</b><small>${esc(x.title)} · ${x.fresh ? 'Aktif' : 'Terakhir'} ${locAgo(x.ts, x.now)}${d != null ? '<br>' + fmtDist(d) + ' darimu' : ''}</small></div><a class="chip" href="https://www.google.com/maps?q=${x.lat},${x.lng}" target="_blank" rel="noopener">Peta</a><button type="button" class="chip" data-u="${x.uid}">Chat</button></div>`; }).join('')
       : '<div class="empty">Belum ada teman yang menyalakan share. Teman hanya muncul jika tombol Share ke teman miliknya juga nyala.</div>');
   fmInit(fmMarks);
 }
